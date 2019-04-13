@@ -3,26 +3,24 @@
 """
 This will be the main program implementing the mouvement and path finding algorithm
 
-
-
-when delete keep track of intersctions so that the algorithm do not go through other atoms
-
-
-
 """
 import numpy as np
 import time
 import path_finding_algorithm as pfa
-import connect_vrep as cv
-import sim_arduino as sa
+import connect_robot as cr
+import connect_camera as cc
 import matplotlib.pyplot as plt
 import sys
 import itertools
+import random
+
+
 
 #################################################### Global variables ####################################################
 
 
-
+# TODO : SET VALUES
+cameraTrustRate = 0.
 ratio = 100 #means 1m = ratio points in the matrix
 atomDiameter = 0.08 #in meters
 maxRobotDiameter = 0.2 #in meters
@@ -36,57 +34,57 @@ Atoms = []
 
 # Classes 
 
-class robot:
-    def __init__(self, x, y, diameter, v, theta, label):
-        self.x = x
-        self.y = y
-        self.diameter = diameter
-        self.v = v
-        self.theta = theta
-        self.label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
+class element:
+    def __init__(self, x, y, diameter, label):
+        self.__x = round(x, 3)
+        self.__y = round(y, 3)
+        self.__diameter = round(diameter, 3)
+        self.__label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
     def getX(self):
-        return self.x
+        return self.__x
     def getY(self):
-        return self.y
-    def getDir(self):
-        return self.theta
+        return self.__y
     def getDiameter(self):
-        return self.diameter
+        return self.__diameter
     def getLabel(self):
-        return self.label;
+        return self.__label;
+    def setX(self, x):
+        self.__x = round(x,3)
+    def setY(self, y):
+        self.__y = round(y,3)
+    def setLabel(self, label):
+        self.__label = label
 
-class atom:
+class robot (element):
+    def __init__(self, x, y, diameter, v, theta, label): # for label use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
+        element.__init__(self, x, y, diameter, label)
+        self.__v = round(v, 3)
+        self.__theta = round(theta, 3)
+    def getDir(self):
+        return self.__theta
+    def setDir(self, theta):
+        self.__theta = round(theta, 3)
+    def setDiameter(self, diameter):
+        self.__diameter = round(diameter, 3)
+
+class atom (element):
     def __init__(self, x, y, label, diameter = atomDiameter):
         global Atoms
         global idIncrement
-        self.x = x
-        self.y = y
-        self.diameter = diameter
-        self.label = label
-        self.id = idIncrement
+        element.__init__(self, x, y, diameter, label)
+        self.__id = idIncrement
         idIncrement += 1
         Atoms.append(self)
-    def getX(self):
-        return self.x
-    def getY(self):
-        return self.y
     def getId(self):
-        return self.id
-    def getDiameter(self):
-        return self.diameter
-    def getLabel(self):
-        return self.label;
+        return self.__id
+    def setId(self, Id):
+        self.__id = Id
+    def setDiameter(self, diameter):
+        self.__diameter = round(diameter,3)
     
-class point:
+class point (element):
     def __init__(self, x , y):
-        self.x = x
-        self.y = y
-    def getX(self):
-        return self.x
-    def getY(self):
-        return self.y
-    def getDiameter():
-        return 0.0
+        element.__init__(self, x, y, 0.0, "Point")
     
 class colors:
     BLACK   = '\033[1;30m'
@@ -101,6 +99,7 @@ class colors:
 
 # more Global Variables
         
+# TODO : SET VALUES
 ourRobot = robot(0.225, 0.75, 0.2,0,0, "ours")
 margin = ourRobot.getDiameter()/2
 opponentFirstRobot = robot(2.75, 0.5, 0.2,0,0,"theirs1")
@@ -177,10 +176,11 @@ atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGo
         ]
         )
 
-missions = np.array([
-        [Atoms[0], point(0.225, 0.45), 1], # 1 is for the first part of the mission (robot->atom) and 2 for the second (robot+atom -> target) than 3 for done
-        [Atoms[1], point(0.225, 0.45), 1],
-        [Atoms[2], point(0.225, 0.45), 1],
+# TODO : ADD SCORES AND UPDATE POSITIONS
+missions = np.array([ #[atom, target , stage, score]
+        [Atoms[0], point(0.225, 0.45), 1, 0], # 1 is for the first part of the mission (robot->atom) and 2 for the second (robot+atom -> target) than 3 for done
+        [Atoms[1], point(0.225, 0.45), 1 , 0],
+        [Atoms[2], point(0.225, 0.45), 1 , 0],
         [Atoms[3], point(0.225, 0.45), 1],
         [Atoms[4], point(0.225, 0.45), 1],
         [Atoms[5], point(0.225, 0.45), 1],
@@ -347,16 +347,16 @@ def addAtoms(atoms, table): #returns 1 if successful and -1 if not
 
 
 
-def getThetaFromTargetToSource(target, source): # in ]-pi,pi]
+def getThetaFromSourceToTarget(source, target): # in ]-pi,pi]
     
-    dx = source[0] - target[0]
-    dy = source[1] - target[1]
+    dx = target[0] - source[0]
+    dy = target[1] - source[1]
     
-    sin = dx/np.sqrt(dx**2 + dy**2)
-    tetaFromTarget = np.arcsin(sin)
-    if(dy < 0 and dx >= 0) : tetaFromTarget = np.pi - tetaFromTarget
-    if(dy < 0 and dx < 0) : tetaFromTarget = - np.pi - tetaFromTarget
-    return tetaFromTarget
+    sin = dy/np.sqrt(dx**2 + dy**2)
+    tetaFromSource = np.arcsin(sin)
+    if(dy >= 0 and dx < 0) : tetaFromSource = np.pi - tetaFromSource
+    if(dy < 0 and dx < 0) : tetaFromSource = - np.pi - tetaFromSource
+    return tetaFromSource
 
 
 
@@ -382,79 +382,149 @@ def initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSeco
     return table
 
 
-def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, response):
-    
+def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, response): # Update is done if element is at least 7cm near the robot
+    # TODO : TO BE TESTED
     """
     to get the current disposition of atoms what we will do is the following:
         1 - get captors response from "response"
         2 - gess what the robot is looking at:
-            1-1 - if Robot : update opponentFirstRobot position/orientation or opponentSecondRobot position/orientation
+            1-1 - if looking at Robot : update opponentFirstRobot position/orientation or opponentSecondRobot position/orientation
             1-2 - if an obstacle : adjust our robot's position/orientation if possible or do nothing if not
-            1-3 - if an atom : guess which atom it is (the nearest one to the robot with the color we see for example or use the camera) 
-            anyway if we mistake we will only have two atoms with the same color switched which is not a problem ..
+            1-3 - if an atom : guess (randomly & smartly) which atom it is
+            (it is not crucial that we do not mistake the choice but the more we mistake the less efficient the program becomes)
         3 - adjust our robot's position/orientation using data from encoders "to be got from response too" and from camera if possible ...
-        NOTE that an initial robot's position/orientation ajustment will be done in the method sendNextAction so that we can raise an error if 
-        there is a big difference between theorical and expirimental values !
         
     """
+    elements = theRobotIsLookingAt(getCaptorsData(response), table)
+    for elementData in elements:
+        updatePosition(elementData, getCaptorsData(response), ourRobot, table)
     
-    #1
-    leftFrontCaptor = int(response[0:3]) / 100. #distance to something in m
-    rightFrontCaptor = int(response[3:6]) / 100. #distance to something in m
-    backCaptor = int(response[6:9]) / 100. #distance to something in m
-    
-    #2
-    element = theRobotIsLookingAt(leftFrontCaptor, rightFrontCaptor, backCaptor, table)
-    if element[0] == "their first robot":
-        updatePosition(opponentFirstRobot, leftFrontCaptor, element[1], rightFrontCaptor, backCaptor, table)
-    elif element[0] == "their second robot":
-        updatePosition(opponentSecondRobot, element[1], leftFrontCaptor, rightFrontCaptor, backCaptor, table)
-    else:
-        updatePosition(atomsDisposition, element[1], leftFrontCaptor, rightFrontCaptor, backCaptor, table)
-        
-    #3
-    ecodorLeft = int(response[9:12]) / 100. #distance traveled by the left encodor after the action in m
-    ecodorRight = int(response[12:15]) / 100. #distance traveled by the left encodor after the action in m
-    updateOurRobotPosition(ecodorLeft, ecodorRight, ourRobot)
-    
+    updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
     message("Table state updated...")
     
-    return
- 
-def theRobotIsLookingAt(leftFrontCaptor, rightFrontCaptor, backCaptor, table): #returns the element of the table info
-    return ["atom", 5]
-
-def updatePosition(element, ID, leftFrontCaptor, rightFrontCaptor, backCaptor, table): 
-    #ask for camera data
-    return
-
-def updateOurRobotPosition(ecodorLeft, ecodorRight, ourRobot): # raises error if theorie != experience
-    #ask for camera data
-    if False : raise ValueError('Error in updating the robot is position!')
-    return
 
 
+def theRobotIsLookingAt(captorsData, table): #returns the element of the table info
+    
+    global cameraTrustRate
+    
+    camElement = cc.robotLookingAt()
+    
+    # TODO : GENERATE AN ELEMENT FROM CAPTORS DATA
+    
+    if cameraTrustRate > 0.:
+            return [[camElement, 2, 3, captorsData[2], captorsData[3]]]
+    
+    inTheZone = False
+    for i in range(6):
+        if captorsData[i] != -1:
+            inTheZone = True
+                
+    if inTheZone:
+        expElement = 0 # TODO
+        return [[expElement, 4, 5, captorsData[4], captorsData[5]]] # element and the two captor detecting it 
+          # returns [] is no element is seen
+          # in case there is only one captor looking at something return [[expElement, 4, 4 , captorsData[4], captorsData[4] + expElement.getDiameter()]]
+    
+    else:
+        
+        return None
+        
 
-def sendNextAction(table):
+def updatePosition(elementData, ourRobot, table):  # ID = -1 if their first robot is to be updated and -2 if their second robot is to be updated
+    
+    # TODO : TO TEST
+    
+    global cameraTrustRate
+    
+    camX, camY = 0,0
+    if elementData[0].label() == "theirs1":
+        camX, camY = cc.getOpponentsFirstRobotPosition()
+    elif elementData[0].label() == "theirs2":
+        camX, camY = cc.getOpponentsSecondRobotPosition()
+    else:
+        camX, camY = cc.getAtomPosition(elementData[1:])
+    
+    expX, expY = getExpXY(elementData, ourRobot)
+        
+    X = expX * (1 - cameraTrustRate) + camX * cameraTrustRate
+    Y = expY * (1 - cameraTrustRate) + camY * cameraTrustRate
+    
+    oldElement = element.copy()
+    element.setX(X) #do not forget to update on the table too
+    element.setY(Y)
+    updateElement(oldElement, element, table)
+
+def getExpXY(elementData, ourRobot): # TODO : TO TEST
+    # look at the drawing
+    if elementData[3] > 0.08 or elementData[4] > 0.08:
+        raise ValueError("Error in getExpXY ")
+    R, r = ourRobot.getDiameter() / 2 , elementData[0].getDiameter() / 2
+    thetas = np.array([-0.981, -0.785, -0.196, 0.196, 0.785, 0.981]) + ourRobot.getDir()
+    xA, yA = (R + elementData[3]) * np.cos(thetas[elementData[1]]) + ourRobot.getX(), (R + elementData[3]) * np.sin(thetas[elementData[1]]) + ourRobot.getY()
+    xB, yB = (R + elementData[4]) * np.cos(thetas[elementData[2]]) + ourRobot.getX(), (R + elementData[4]) * np.sin(thetas[elementData[2]]) + ourRobot.getY()
+    d = np.sqrt((xA-xB)**2 + (yA-yB)**2)
+    h = np.sqrt(r**2 - (d/2)**2)
+    if xA == xB:
+        dx, dy = h, 0
+    elif yA == yB:
+        dx, dy = 0, h
+    else:
+        dx, dy = h / np.sqrt(1 + ((xA-xB)/(yA-yB))**2), h / np.sqrt(1 + ((yA-yB)/(xA-xB))**2)
+        
+    print("d = " + str(d))
+    signe = 1
+    if (yA-yB) > 0 and (xA-xB) > 0 or (yA-yB) < 0 and (xA-xB) < 0: 
+        signe = -1
+    print(signe)
+    x1, y1 = (xA + xB) / 2 + signe * dx, (yA + yB) / 2 + dy
+    x2, y2 = (xA + xB) / 2 - signe * dx, (yA + yB) / 2 - dy
+    print("x = " + str(x))
+    if np.sqrt((x1-ourRobot.getX())**2 + (y1-ourRobot.getY())**2) < np.sqrt((x2-ourRobot.getX())**2 + (y2-ourRobot.getY())**2):
+        return x2, y2
+    else:
+        return x1, y1
+
+        
+
+def updateOurRobotPosition(traveledDistance, rotationAngle, ourRobot): 
+    
+    global cameraTrustRate
+    
+    camX, camY , camTheta = cc.getRobotPosition()
+    
+    expTheta = rotationAngle + ourRobot.getDir()
+    expX = ourRobot.getX() + traveledDistance * np.cos(expTheta)
+    expY = ourRobot.getY() + traveledDistance * np.sin(expTheta)
+    
+    theta = expTheta * (1 - cameraTrustRate) + camTheta * cameraTrustRate
+    X = expX * (1 - cameraTrustRate) + camX * cameraTrustRate
+    Y = expY * (1 - cameraTrustRate) + camY * cameraTrustRate
+    
+    ourRobot.setX(X)
+    ourRobot.setY(Y)
+    ourRobot.setDir(theta)
+
+
+
+def sendNextActions(table):
     
     """
     given tableDisposition and currMission we do:
         1 - if currentMission is feasible do:
             1-1 - if the next step leads to the goal (we are one step away from the target):
-                1-1-1 - increment score 
-                1-1-2 - send action to arduino
-                1-1-3 - store arduino's response in response
+                1-1-1 - increment score
             1-2 - else
                 1-1-1 - set score to zero
-                1-1-2 - send action to arduino
-                1-1-3 - store arduino's response in response
+            1-3 - send next actions to arduino
+            1-4 - store arduino's response in response
         2- look for a feasable mission:
             2-1 - if found:
                 change currentMission and go to 1
             2-2 - if not:
                 wait some time (1s for example and retry)
                 raise an error after (5s for example)
-    
+                
     """
     
     global currentMission
@@ -465,31 +535,56 @@ def sendNextAction(table):
     while isinstance(path, bool):
         tmpMission += 1 # raise error if no mission is possible.. of wait 2-2
         
-        # delete atom from table in case we have an atom SO ADD THE TEST HERE @todo
-        #deleteElement(missions[tmpMission][0], table)
-        
-        # todo : robot position should be 1/2*diametter far from atom's pos
         # preceed tests
         if missions[tmpMission][2] == 1:
             path = findPath(table, missions[tmpMission][0])
-        else:
+        elif missions[tmpMission][2] == 2:
             path = findPath(table, missions[tmpMission][1])
-            
-        #re-add deleted element
-        #addElement(missions[tmpMission][0], table)
 
     currentMission = tmpMission
     
-    #1
     
-    # @@@@@@@@ For sim @@@@@@@@@
-    #time.sleep(1)
-    draw(path, table)
-    # @@@@@@@@ End for sim @@@@@@@@@
+    #sending actions
     
-    response = "999999999000000" # Arduino's response after sending action
+    #proceed with the first part of the path
+    firstPart = [(int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), path[0]]
+    for i in range(1,len(path)):
+        if (path[i][0] - firstPart[i][0] != firstPart[i][0] - firstPart[i-1][0]) or (path[i][1] - firstPart[i][1] != firstPart[i][1] - firstPart[i-1][1]): break
+        firstPart.append(path[i])
+            
+        #rotation
+    theta = getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), path[0])
+    if ourRobot.getDir() > theta:
+        cr.turnRight(ourRobot.getDir() - theta)
+    elif ourRobot.getDir() < theta:
+        cr.turnLeft(ourRobot.getDir() - theta)
+    
+        #translation
+    response = cr.moveForward(np.sqrt(np.power(path[-1][0] - int(ourRobot.getX()*ratio) , 2) + np.power(path[-1][1] - int(ourRobot.getY()*ratio) , 2)) / float(ratio))
+    
+    if len(path) == 1 and missions[currentMission][2] == 1 and actionComplete(response):
+        cr.grab()
+    
     score = 0
+    if len(path) == 1 and missions[currentMission][2] == 2 and actionComplete(response):
+        score = missions[currentMission][3]
+    
+    #response = "99999999900000000" # Arduino's response after sending action
     return score, response # score != 0 only if the next action is the final action of an operation and response is the string sent by arduino
+
+def actionComplete(response): # returns a boolean saying if response indicates that the action was interupted (false) or not (true)
+    return int(response[0]) == 1
+
+
+def getCaptorsData(response):
+    return int(response[1:3]) / 100. , int(response[3:5]) / 100. , int(response[5:7]) / 100. , int(response[7:9]) / 100. , int(response[9:11]) / 100. , int(response[11:13]) / 100. , int(response[13:15]) / 100.  
+
+def getTraveledDistance(response):
+    return int(response[15:19]) / 1000.
+
+def getRotationAngle(response):
+    return int(response[19:23]) / 1000.
+
 
 
 def findPath(table, target):
@@ -516,6 +611,11 @@ def findPath(table, target):
             return path
     return False
 
+
+def initialRespose(): # returns initial default response (needed ???)
+    # TODO : DEPENDS ON RESPONSE FORM
+    return "199999999900000000" # 1st num for action complete or not => 3 num left captor => 3 num right captor => 3 num middle captor => 4 num traveled distance => 4 num angle
+
 #################################################### Main loop #################################################### 
     
 
@@ -526,18 +626,13 @@ def action():
     global currentMission
     
     startTime = time.time()
-    actionResponse = "999999999000000" #string sent by arduino
+    actionResponse = initialRespose() #string sent by arduino
     score = 0
     
     while time.time() - startTime < 100:
         
-        # @@@@@@@@ For sim @@@@@@@@@
-        tableDisposition = initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot)
-        currentMission += 1
-        # @@@@@@@@ End for sim @@@@@@@@@
-        
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
-        actionScore, actionResponse = sendNextAction(tableDisposition) 
+        actionScore, actionResponse = sendNextActions(tableDisposition)
         if actionScore == -1 :
             raise ValueError('Error in actionScore!')
         else:
@@ -554,32 +649,8 @@ def draw(path, table):
     for i,j in path:
         table[i,j] = 7
 
-#    with open('test_' + label + '.txt', "w") as f:
-#        for i in range(len(table)):
-#            for j in range(len(table[0])):
-#                f.write(str(int(table[i,j])))
-#            f.write("\n")
     plt.figure(figsize=(7,8))
     plt.imshow(table)
     plt.show()
-
-
-# pfa
-# table = initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot)
-# astar = pfa.astar(table, (12,90), (240,185))
-# for i,j in astar:
-#     table[i,j] = 7
-
-
-
-# writing result in a file
-#f = open('test.txt', "w")
-#for i in range(len(table)):
-#    for j in range(len(table[0])):
-#        f.write(str(int(table[i,j])))
-#    f.write("\n")
-#f.close()
-
-
 
 #action()
