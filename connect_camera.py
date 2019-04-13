@@ -21,3 +21,6 @@ def getOpponentsSecondRobotPosition():
 def getAtomPosition(ID):
     # TODO
     return 0,0
+
+def checkState():
+    return False

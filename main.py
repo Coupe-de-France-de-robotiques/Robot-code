@@ -13,14 +13,14 @@ import matplotlib.pyplot as plt
 import sys
 import itertools
 import random
-
+import copy as cp
 
 
 #################################################### Global variables ####################################################
 
 
 # TODO : SET VALUES
-cameraTrustRate = 0.
+camera = False
 ratio = 100 #means 1m = ratio points in the matrix
 atomDiameter = 0.08 #in meters
 maxRobotDiameter = 0.2 #in meters
@@ -39,7 +39,9 @@ class element:
         self.__x = round(x, 3)
         self.__y = round(y, 3)
         self.__diameter = round(diameter, 3)
-        self.__label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
+        self.__label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one    
+    def __str__(self):
+        return str(self.__label) + "(x = " + str(self.__x) + ", y = " + str(self.__y) + ")"
     def getX(self):
         return self.__x
     def getY(self):
@@ -106,35 +108,38 @@ opponentFirstRobot = robot(2.75, 0.5, 0.2,0,0,"theirs1")
 opponentSecondRobot = robot(2.75,1,0.1,0,0,"theirs2")
 if numberOfOpponentRobots == 1 : opponentSecondRobot = None
 
-atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGoldonium(-2)
+atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGoldonium(-2) START FROM ATOMS WE WILL NOT USE TO ATOMS OF OPPONENET
         [
                 
         ##### primary atoms #####
         
-         #near table of elements
+         #near table of elements : ours
         atom(0.5, 0.45, 1),
         atom(0.5, 0.75, 1),
         atom(0.5, 1.05, 2),
         
-        atom(2.5 , 0.45, 1),
-        atom(2.5, 0.75, 1),
-        atom(2.5, 1.05, 2),
         
-         #in the central cercles
+         #in the central cercles : ours
         atom(1, 1.05 + atomDiameter*1.5, 1),
         atom(1, 1.05 - atomDiameter*1.5, 3),
         atom(1 - atomDiameter*1.5 , 1.05, 2),
         atom(1 + atomDiameter*1.5 , 1.05, 1),
         
+        
+         #in the central cercles : theirs
         atom(2 - atomDiameter/2 , 1.05 - atomDiameter*1.5, 1),
         atom(2 - atomDiameter/2 , 1.05, 2),
         atom(2 + atomDiameter/2 , 1.05, 3),
         atom(2 , 1.05 + atomDiameter, 1),
         
+         #near table of elements : theirs
+        atom(2.5 , 0.45, 1),
+        atom(2.5, 0.75, 1),
+        atom(2.5, 1.05, 2),
+        
          #in the balance
         atom(0.834, 1.8, 2), # to 0.83??
         atom(2.166 , 1.8, 2),
-        
         
         
         ##### secondary atoms #####
@@ -167,8 +172,6 @@ atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGo
         atom(1.3, 0, 3, 0.),
         atom(1.7, 0, 3, 0.), 
         
-        
-        
         ##### Goldonium #####
         atom(0.75, 0, -1, 0.),
         atom(2.25, 0, -2, 0.)
@@ -176,7 +179,7 @@ atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGo
         ]
         )
 
-# TODO : ADD SCORES AND UPDATE POSITIONS
+# TODO : ADD SCORES AND UPDATE POSITIONS AND START FROM ATOMS WE WILL NOT USE TO ATOMS OF OPPONENET
 missions = np.array([ #[atom, target , stage, score]
         [Atoms[0], point(0.225, 0.45), 1, 0], # 1 is for the first part of the mission (robot->atom) and 2 for the second (robot+atom -> target) than 3 for done
         [Atoms[1], point(0.225, 0.45), 1 , 0],
@@ -318,7 +321,7 @@ def deleteElement(element, table): #returns 1 if successful and -1 if not
     
     if Xstart == -1 : return -1
     for x,y in itertools.product(range(Xstart, Xend+1), range(Ystart, Yend+1)):
-        if np.sqrt(np.power((x - Xstart/2. - Xend/2.),2) + np.power((y - Ystart/2. - Yend/2.),2)) <= ((element.getDiameter()) / 2. + margin) * ratio:
+        if np.sqrt(np.power(x - element.getX()*ratio,2) + np.power(y - element.getY()*ratio,2)) <= (element.getDiameter() / 2. + margin) * ratio:
             table[x][y] -= 1
     return 1
 
@@ -361,7 +364,7 @@ def getThetaFromSourceToTarget(source, target): # in ]-pi,pi]
 
 
 def initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot):
-        
+    
     table = emptyTable.copy()
     
     #if addElement(ourRobot, table) == -1 : message("ERROR WHILE ADDING OUR ROBOT TO THE TABLE")
@@ -382,8 +385,8 @@ def initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSeco
     return table
 
 
-def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, response): # Update is done if element is at least 7cm near the robot
-    # TODO : TO BE TESTED
+def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, response): # Updates is done if element is at least 7cm near the robot
+
     """
     to get the current disposition of atoms what we will do is the following:
         1 - get captors response from "response"
@@ -393,76 +396,89 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
             1-3 - if an atom : guess (randomly & smartly) which atom it is
             (it is not crucial that we do not mistake the choice but the more we mistake the less efficient the program becomes)
         3 - adjust our robot's position/orientation using data from encoders "to be got from response too" and from camera if possible ...
+        4 - if the camera is trustfull update all elements in the table
         
     """
-    elements = theRobotIsLookingAt(getCaptorsData(response), table)
-    for elementData in elements:
-        updatePosition(elementData, getCaptorsData(response), ourRobot, table)
+    global camera
     
-    updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+    if camera:
+        x,y = cc.getOpponentsFirstRobotPosition()
+        opponentFirstRobot.setX(x)
+        opponentFirstRobot.setY(y)
+        if numberOfOpponentRobots == 2:
+            x,y = cc.getOpponentsSecondRobotPosition()
+            opponentSecondRobot.setX(x)
+            opponentSecondRobot.setY(y)
+        x,y = cc.getRobotPosition()
+        ourRobot.setX(x)
+        ourRobot.setY(y)
+        for i in range(len(Atoms)):
+            x,y = cc.getAtomPosition(i)
+            Atoms[i].setX(x)
+            Atoms[i].setY(y)
+    else:
+        updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+        elements = theRobotIsLookingAt(getCaptorsData(response))
+        for elementData in elements:
+            updatePosition(elementData, ourRobot, table)
+
     message("Table state updated...")
     
 
 
-def theRobotIsLookingAt(captorsData, table): #returns the element of the table info
-    
-    global cameraTrustRate
-    
-    camElement = cc.robotLookingAt()
-    
-    # TODO : GENERATE AN ELEMENT FROM CAPTORS DATA
-    
-    if cameraTrustRate > 0.:
-            return [[camElement, 2, 3, captorsData[2], captorsData[3]]]
-    
-    inTheZone = False
-    for i in range(6):
-        if captorsData[i] != -1:
-            inTheZone = True
-                
-    if inTheZone:
-        expElement = 0 # TODO
-        return [[expElement, 4, 5, captorsData[4], captorsData[5]]] # element and the two captor detecting it 
-          # returns [] is no element is seen
-          # in case there is only one captor looking at something return [[expElement, 4, 4 , captorsData[4], captorsData[4] + expElement.getDiameter()]]
-    
-    else:
+def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
+    validCaptors = []
+    if captorsData[0] <= 0.07 and captorsData[0] != 0.0 and captorsData[1] == 0.0:
+        validCaptors.append((0,0))
+    if captorsData[5] <= 0.07 and captorsData[5] != 0.0 and captorsData[4] == 0.0:
+        validCaptors.append((5,5))
+    for i in range(5):
+        if captorsData[i] != 0.0 and captorsData[i+1] != 0.0 and func(captorsData[i], captorsData[i+1], R):
+            validCaptors.append((i,i+1))       
         
-        return None
+    if len(validCaptors) != 0:
+        elements = []
+        tmpListOfAtoms = [missions[i][0] for i in range(len(missions)) if missions[i][2] == 1 and missions[i][0].getLabel() >= 0 and missions[i][0].getDiameter() > 0.] # enlever goldonium aussi ?? et les atoms de D=0
+        for i,j in validCaptors:
+            if len(tmpListOfAtoms) > 0: 
+                element = tmpListOfAtoms.pop()
+                if i != j:
+                    elements.append([element, i, j, captorsData[i], captorsData[j]])
+                else:
+                    elements.append([element, i, j, captorsData[i], captorsData[j] + element.getDiameter()])
+        return elements
+    else:
+        return []    
         
 
-def updatePosition(elementData, ourRobot, table):  # ID = -1 if their first robot is to be updated and -2 if their second robot is to be updated
-    
-    # TODO : TO TEST
-    
-    global cameraTrustRate
-    
-    camX, camY = 0,0
-    if elementData[0].label() == "theirs1":
-        camX, camY = cc.getOpponentsFirstRobotPosition()
-    elif elementData[0].label() == "theirs2":
-        camX, camY = cc.getOpponentsSecondRobotPosition()
-    else:
-        camX, camY = cc.getAtomPosition(elementData[1:])
-    
-    expX, expY = getExpXY(elementData, ourRobot)
-        
-    X = expX * (1 - cameraTrustRate) + camX * cameraTrustRate
-    Y = expY * (1 - cameraTrustRate) + camY * cameraTrustRate
-    
-    oldElement = element.copy()
-    element.setX(X) #do not forget to update on the table too
-    element.setY(Y)
-    updateElement(oldElement, element, table)
+def updatePosition(elementData, ourRobot, table):
 
-def getExpXY(elementData, ourRobot): # TODO : TO TEST
+    X, Y = getExpXY(elementData, ourRobot)
+    
+    oldElement = cp.copy(elementData[0])
+    elementData[0].setX(X) #do not forget to update on the table too
+    elementData[0].setY(Y)
+    updateElement(oldElement, elementData[0], table)
+
+
+
+def func(x, y, R):
+    rad27 = 0.471238898
+    return (y * np.sin(rad27) + R * np.sin(rad27))**2 + (x + R - y * np.cos(rad27) - R * np.cos(rad27))**2 <= 0.08**2
+
+
+
+def getExpXY(elementData, ourRobot, pltShow = False, R = ourRobot.getDiameter() / 2):
     # look at the drawing
-    if elementData[3] > 0.08 or elementData[4] > 0.08:
-        raise ValueError("Error in getExpXY ")
-    R, r = ourRobot.getDiameter() / 2 , elementData[0].getDiameter() / 2
-    thetas = np.array([-0.981, -0.785, -0.196, 0.196, 0.785, 0.981]) + ourRobot.getDir()
+    r = elementData[0].getDiameter() / 2
+    thetas = np.array([-1.178, -0.707, -0.236, 0.236, 0.707, 1.178]) + ourRobot.getDir()
     xA, yA = (R + elementData[3]) * np.cos(thetas[elementData[1]]) + ourRobot.getX(), (R + elementData[3]) * np.sin(thetas[elementData[1]]) + ourRobot.getY()
     xB, yB = (R + elementData[4]) * np.cos(thetas[elementData[2]]) + ourRobot.getX(), (R + elementData[4]) * np.sin(thetas[elementData[2]]) + ourRobot.getY()
+    
+    if pltShow:
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.plot([ourRobot.getX(), ourRobot.getX() + R, xA , xB ],[ourRobot.getY(), ourRobot.getY(), yA, yB], 'ro')
+    
     d = np.sqrt((xA-xB)**2 + (yA-yB)**2)
     h = np.sqrt(r**2 - (d/2)**2)
     if xA == xB:
@@ -472,14 +488,11 @@ def getExpXY(elementData, ourRobot): # TODO : TO TEST
     else:
         dx, dy = h / np.sqrt(1 + ((xA-xB)/(yA-yB))**2), h / np.sqrt(1 + ((yA-yB)/(xA-xB))**2)
         
-    print("d = " + str(d))
     signe = 1
     if (yA-yB) > 0 and (xA-xB) > 0 or (yA-yB) < 0 and (xA-xB) < 0: 
         signe = -1
-    print(signe)
     x1, y1 = (xA + xB) / 2 + signe * dx, (yA + yB) / 2 + dy
     x2, y2 = (xA + xB) / 2 - signe * dx, (yA + yB) / 2 - dy
-    print("x = " + str(x))
     if np.sqrt((x1-ourRobot.getX())**2 + (y1-ourRobot.getY())**2) < np.sqrt((x2-ourRobot.getX())**2 + (y2-ourRobot.getY())**2):
         return x2, y2
     else:
@@ -488,19 +501,11 @@ def getExpXY(elementData, ourRobot): # TODO : TO TEST
         
 
 def updateOurRobotPosition(traveledDistance, rotationAngle, ourRobot): 
-    
-    global cameraTrustRate
-    
-    camX, camY , camTheta = cc.getRobotPosition()
-    
-    expTheta = rotationAngle + ourRobot.getDir()
-    expX = ourRobot.getX() + traveledDistance * np.cos(expTheta)
-    expY = ourRobot.getY() + traveledDistance * np.sin(expTheta)
-    
-    theta = expTheta * (1 - cameraTrustRate) + camTheta * cameraTrustRate
-    X = expX * (1 - cameraTrustRate) + camX * cameraTrustRate
-    Y = expY * (1 - cameraTrustRate) + camY * cameraTrustRate
-    
+        
+    theta = rotationAngle + ourRobot.getDir()
+    X = ourRobot.getX() + traveledDistance * np.cos(theta)
+    Y = ourRobot.getY() + traveledDistance * np.sin(theta)
+        
     ourRobot.setX(X)
     ourRobot.setY(Y)
     ourRobot.setDir(theta)
@@ -575,15 +580,17 @@ def sendNextActions(table):
 def actionComplete(response): # returns a boolean saying if response indicates that the action was interupted (false) or not (true)
     return int(response[0]) == 1
 
-
-def getCaptorsData(response):
-    return int(response[1:3]) / 100. , int(response[3:5]) / 100. , int(response[5:7]) / 100. , int(response[7:9]) / 100. , int(response[9:11]) / 100. , int(response[11:13]) / 100. , int(response[13:15]) / 100.  
+def getCaptorsData(response): # 0 if element is out of [0,15]
+    return int(response[1:3]) / 100. , int(response[3:5]) / 100. , int(response[5:7]) / 100. , int(response[7:9]) / 100. , int(response[9:11]) / 100. , int(response[11:13]) / 100.  
 
 def getTraveledDistance(response):
-    return int(response[15:19]) / 1000.
+    return int(response[13:17]) / 1000.
 
 def getRotationAngle(response):
-    return int(response[19:23]) / 1000.
+    if int(response[17:21]) <= np.pi: 
+        return int(response[17:21]) / 1000.
+    else:
+        return - round((2*np.pi - int(response[17:21]) / 1000.),3)
 
 
 
@@ -614,7 +621,7 @@ def findPath(table, target):
 
 def initialRespose(): # returns initial default response (needed ???)
     # TODO : DEPENDS ON RESPONSE FORM
-    return "199999999900000000" # 1st num for action complete or not => 3 num left captor => 3 num right captor => 3 num middle captor => 4 num traveled distance => 4 num angle
+    return "100000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
 
 #################################################### Main loop #################################################### 
     

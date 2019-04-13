@@ -9,24 +9,32 @@ import numpy as np
 # Test adding atoms
 
 def test1(i):
-    empty = np.zeros((3 * ratio, 2 * ratio))
+    empty = np.zeros((3 * mn.ratio, 2 * mn.ratio))
     mn.addElement(mn.Atoms[i], empty)
     mn.draw(np.array([]), empty)
     
 def test2():
     for i in range(len(mn.Atoms)):
         test1(i)
+        
+# Test delete atoms
+
+def test3(i):
+    empty = np.zeros((3 * mn.ratio, 2 * mn.ratio))
+    mn.addElement(mn.Atoms[i], empty)
+    mn.deleteElement(mn.Atoms[i], empty)
+    mn.draw(np.array([]), empty)
 
 # Test findPath
         
-def test3(i):
+def test4_sub(i):
     empty = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
     mn.draw(mn.findPath(empty, mn.Atoms[i]), empty)
 
 
 def test4():
     for i in range(len(mn.Atoms)):
-        test3(i)
+        test4_sub(i)
 
 # Test getThetaFromSourceToTarget
 
@@ -49,18 +57,56 @@ def test6():
     
 def test7():
     element = mn.atom(1, 1.05 + mn.atomDiameter*1.5, 1)
-    mn.ourRobot.setDir(np.pi / 2)
-    x, y = mn.getExpXY([element, 3, 2, 0.03, 0.03], mn.ourRobot)
-    print(round(x,3),round(y,3))
-    print(element.getDiameter() / 2 + mn.ourRobot.getDiameter() / 2 + mn.ourRobot.getX() )
-    print(mn.ourRobot.getX(), mn.ourRobot.getY())
+    #mn.ourRobot.setDir(np.pi / 2)
+    #x, y = mn.getExpXY([element, 0, 1, 0.0, 0.0], mn.ourRobot)
+    x, y = mn.getExpXY([element, 3, 4, 0.05, 0.07], mn.ourRobot, True)
+    #x, y = mn.getExpXY([element, 2, 3, 0.0, 0.], mn.ourRobot)
+    #x, y = mn.getExpXY([element, 3, 4, 0.0, 0.], mn.ourRobot)
+    #x, y = mn.getExpXY([element, 4, 5, 0.0, 0.], mn.ourRobot)
+
+    #x1, y1 = mn.getExpXY([element, 0, 0, 0.02, 0.02 + element.getDiameter()], mn.ourRobot)
+    #print(round(x,3),round(y,3))
+    #print(element.getDiameter() / 2 + mn.ourRobot.getDiameter() / 2 + mn.ourRobot.getX() )
+    #print(mn.ourRobot.getX(), mn.ourRobot.getY())
+
+
+# TEST updatePosition
+
+def test8():
+    table = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
+    element = mn.atom(1, 1.05 + mn.atomDiameter*1.5, 1)
+    for i in range(5):
+        elementData = [element, i, i+1, 0.03, 0.03]
+        mn.updatePosition(elementData, mn.ourRobot, table)
+        mn.draw(np.array([]), table)
+
+
+# Test theRobotIsLookingAt
+
+def test9():
+    response = "0000408000000"
+    result = mn.theRobotIsLookingAt(mn.getCaptorsData(response))
+    print(result)
+   
+# Test updateTable
+
+def test10():
+    table = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
+    response = "000000206000507005759"
+    mn.updateTable(table, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot, mn.atomsDisposition, response)   
+    mn.draw(np.array([]), table)
 
 # TESTS
 
 #test1(17)
 #test2()
+#test3(17)
 #test4() 
-#test3(14)
+#test4_sub(14)
 #test6()
+#test7()
+#test8()
+#test9()
+#test10()
 
 #action()
