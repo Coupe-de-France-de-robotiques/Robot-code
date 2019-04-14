@@ -555,9 +555,6 @@ def sendNextActions(table): # TODO : TO TEST
             path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
             if isinstance(path, bool):
                 putDown(missions[tmpMission][0], table)
-                print("gygyigiggygyigiggygyigiggygyigiggygyigiggygyigiggygyigig")
-                print(int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio))
-                print(int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio))
     
     currentMission = tmpMission
         
@@ -602,7 +599,7 @@ def sendNextActions(table): # TODO : TO TEST
             cr.turnLeft(theta - ourRobot.getDir())
         
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
-        updateOurRobotPosition(0, theta - ourRobot.getDir(), ourRobot)
+        ourRobot.setDir(theta)
         response = response[:13] + "00000000"
         
         putDown(missions[currentMission][0], table)
@@ -611,7 +608,12 @@ def sendNextActions(table): # TODO : TO TEST
         score = missions[currentMission][3]
         
     if theEnd and missions[currentMission][2] == 1 and actionComplete(response):
+        updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+        ourRobot.setDir(getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), (int(missions[currentMission][0].getX()*ratio), int(missions[currentMission][0].getY()*ratio))))
+        response = response[:13] + "00000000"
+        
         grab(missions[currentMission][0], table)
+        
         missions[currentMission][2] = 2
         
     if not actionComplete(response):
