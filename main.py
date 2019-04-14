@@ -22,8 +22,8 @@ import copy as cp
 # TODO : SET VALUES
 camera = False
 ratio = 100 #means 1m = ratio points in the matrix
-atomDiameter = 0.08 #in meters
-maxRobotDiameter = 0.2 #in meters
+atomDiameter = 0.07 #in meters
+maxRobotDiameter = 0.3 #in meters
 numberOfOpponentRobots = 2 #to be set at the begining of the game
 idIncrement = 0 #to automaticlly set atoms ids
 # @@@@@@@@ For sim @@@@@@@@@
@@ -36,62 +36,64 @@ Atoms = []
 
 class element:
     def __init__(self, x, y, diameter, label):
-        self.__x = x
-        self.__y = y
-        self.__diameter = diameter
-        self.__label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one    
+        self._x = x
+        self._y = y
+        self._diameter = diameter
+        self._label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one    
     def __str__(self):
-        return str(self.__label) + "(x = " + str(self.__x) + ", y = " + str(self.__y) + ")"
+        return str(self._label) + "(x = " + str(round(self._x,3)) + ", y = " + str(round(self._y,3)) + ")"
     def getX(self):
-        return self.__x
+        return self._x
     def getY(self):
-        return self.__y
+        return self._y
     def getDiameter(self):
-        return self.__diameter
+        return self._diameter
     def getLabel(self):
-        return self.__label;
+        return self._label;
     def setX(self, x):
-        self.__x = x
+        self._x = x
     def setY(self, y):
-        self.__y = y
+        self._y = y
     def setLabel(self, label):
-        self.__label = label
+        self._label = label
 
 class robot (element):
     def __init__(self, x, y, diameter, v, theta, label): # for label use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
         element.__init__(self, x, y, diameter, label)
-        self.__v = v
-        self.__theta = theta
+        self._v = v
+        self._theta = theta
     def getDir(self):
-        return self.__theta
+        return self._theta
     def setDir(self, theta):
-        self.__theta = theta
+        self._theta = theta
     def setDiameter(self, diameter):
-        self.__diameter = diameter
+        self._diameter = diameter
     def __str__(self):
-        return str(self.getLabel()) + "(x = " + str(self.getX()) + ", y = " + str(self.getY()) + ", theta = " + str(self.getDir()) + ")"
+        return "Robot : " + str(self._label) + " (x = " + str(round(self._x,3)) + ", y = " + str(round(self._y,3)) + ", theta = " + str(round(self._theta,3)) + ")"
 
 class atom (element):
     def __init__(self, x, y, label, diameter = atomDiameter):
         global Atoms
         global idIncrement
         element.__init__(self, x, y, diameter, label)
-        self.__id = idIncrement
+        self._id = idIncrement
         idIncrement += 1
         Atoms.append(self)
     def getId(self):
-        return self.__id
+        return self._id
     def setId(self, Id):
-        self.__id = Id
+        self._id = Id
     def setDiameter(self, diameter):
-        self.__diameter = diameter
-    
+        self._diameter = diameter
+    def __str__(self):
+        return "Atom " + str(self._id) + " (x = " + str(round(self._x,3)) + ", y = " + str(round(self._y,3)) + ")"
+        
 class target (element):
     def __init__(self, x , y, finalRobotOrientation):
         element.__init__(self, x, y, 0.0, "target")
-        self.__finalRobotOrientation = finalRobotOrientation
+        self._finalRobotOrientation = finalRobotOrientation
     def getFinalRobotOrientation(self):
-        return self.__finalRobotOrientation
+        return self._finalRobotOrientation
     
         
 class colors:
@@ -200,35 +202,46 @@ missions = np.array([ #[atom, target , stage, score]
 #        [Atoms[9], target(2*(atomDiameter + space), 1.05), 1, 6],
 #        [Atoms[10], target(6*(atomDiameter + space), 0.45), 1, 6],
         
-#        [Atoms[11], target(atomDiameter + space, 0.45, np.pi), 1],
 #        [Atoms[12], target(2*(atomDiameter + space), 0.45, np.pi), 1],
 #        [Atoms[13], target(atomDiameter + spcae, 0.75), 1],
+        
+        
+        [Atoms[7], target(0,0,0), 1, 6],
+        [Atoms[8], target(0,0,0), 1, 6],
+        [Atoms[9], target(0,0,0), 1, 6],
+        [Atoms[10], target(0,0,0), 1, 6],
+        
+        [Atoms[11], target(0,0,0), 1, 6],
+        [Atoms[12], target(0,0,0), 1, 6],
+        [Atoms[13], target(0,0,0), 1, 6],
+        
         
         [Atoms[14], target(1.4 - margin - atomDiameter, 1.8, 0), 1, 8],
         [Atoms[15], target(1.6 + margin + atomDiameter, 1.8, np.pi), 1, 8],
         
-#        [Atoms[16], target(), 1, 6],
-#        [Atoms[17], target(), 1, 6],
-#        [Atoms[18], target(), 1, 6],
-#        [Atoms[19], target(), 1, 6],
-#        [Atoms[20], target(), 1, 6],
-#        [Atoms[21], target(), 1, 6],
-#        [Atoms[22], target(), 1, 6],
-#        [Atoms[23], target(), 1, 6],
-#        [Atoms[24], target(), 1, 6],
-#        [Atoms[25], target(), 1, 6],
-#        [Atoms[26], target(), 1, 6],
-#        [Atoms[27], target(), 1, 6],
-#        [Atoms[28], target(), 1, 6],
-#        [Atoms[29], target(), 1, 6],
-#        [Atoms[30], target(), 1, 6],
-#        [Atoms[31], target(), 1, 6],
-#        [Atoms[32], target(), 1, 6],
-#        [Atoms[33], target(), 1, 6],
-#        [Atoms[34], target(), 1, 6],
-#        [Atoms[35], target(), 1, 6],
+        [Atoms[16], target(0,0,0), 1, 6], # dummy mission for now target(x = 0, y = 0) : keep them in the list because these dummy atoms are used by the captors
+        [Atoms[17], target(0,0,0), 1, 6],
+        [Atoms[18], target(0,0,0), 1, 6],
+        [Atoms[19], target(0,0,0), 1, 6],
+        [Atoms[20], target(0,0,0), 1, 6],
+        [Atoms[21], target(0,0,0), 1, 6],
+        [Atoms[22], target(0,0,0), 1, 6],
+        [Atoms[23], target(0,0,0), 1, 6],
+        [Atoms[24], target(0,0,0), 1, 6],
+        [Atoms[25], target(0,0,0), 1, 6],
+        [Atoms[26], target(0,0,0), 1, 6],
+        [Atoms[27], target(0,0,0), 1, 6],
+        [Atoms[28], target(0,0,0), 1, 6],
+        [Atoms[29], target(0,0,0), 1, 6],
+        [Atoms[30], target(0,0,0), 1, 6],
+        [Atoms[31], target(0,0,0), 1, 6],
+        [Atoms[32], target(0,0,0), 1, 6],
+        [Atoms[33], target(0,0,0), 1, 6],
+        [Atoms[34], target(0,0,0), 1, 6],
+        [Atoms[35], target(0,0,0), 1, 6],
+        
         [Atoms[36], target(1.4 - margin - 2 * atomDiameter, 1.8, 0), 1, 30],
-#        [Atoms[37], target(0.225, 0.45), 1],
+        [Atoms[37], target(0,0,0), 1, 0],
         ])
 
 
@@ -425,6 +438,7 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
 
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
         elements = theRobotIsLookingAt(getCaptorsData(response))
+             
         for elementData in elements:
             updatePosition(elementData, ourRobot, table)
 
@@ -433,6 +447,7 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
 
 
 def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
+    
     validCaptors = []
     if captorsData[0] <= 0.07 and captorsData[0] != 0.0 and captorsData[1] == 0.0:
         validCaptors.append((0,0))
@@ -440,11 +455,17 @@ def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
         validCaptors.append((5,5))
     for i in range(5):
         if captorsData[i] != 0.0 and captorsData[i+1] != 0.0 and func(captorsData[i], captorsData[i+1], R):
-            validCaptors.append((i,i+1))       
+            validCaptors.append((i,i+1))
+            
+    # ignore if looking at the atom of the mission
+    xm = missions[currentMission][0].getX()
+    ym = missions[currentMission][0].getY()
+    if missions[currentMission][2] == 1 and np.sqrt((xm - ourRobot.getX())**2 + (ym - ourRobot.getY())**2) <= R + atomDiameter + 0.07 and ourRobot.getDir() - getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), (int(xm*ratio),int(ym*ratio))) <= 0.23 and (2,3) in validCaptors:
+        validCaptors.remove((2,3))
         
     if len(validCaptors) != 0:
         elements = []
-        tmpListOfAtoms = [missions[i][0] for i in range(len(missions)) if missions[i][2] == 1 and missions[i][0].getLabel() >= 0 and missions[i][0].getDiameter() > 0.] # enlever goldonium aussi ?? et les atoms de D=0
+        tmpListOfAtoms = [missions[i][0] for i in range(len(missions)) if missions[i][2] == 1 and missions[i][0].getLabel() >= 0] # enlever goldonium aussi ?? et les atoms de D=0
         for i,j in validCaptors:
             if len(tmpListOfAtoms) > 0: 
                 element = tmpListOfAtoms.pop()
@@ -458,13 +479,17 @@ def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
         
 
 def updatePosition(elementData, ourRobot, table):
-
+    
+    tmpElement = cp.copy(elementData[0])
+    
+    if tmpElement.getDiameter() == 0.0 and isinstance(tmpElement.getLabel() , int): # means an atom
+          elementData[0].setDiameter(atomDiameter)
+    
     X, Y = getExpXY(elementData, ourRobot)
     
-    oldElement = cp.copy(elementData[0])
     elementData[0].setX(X) #do not forget to update on the table too
     elementData[0].setY(Y)
-    updateElement(oldElement, elementData[0], table)
+    updateElement(tmpElement, elementData[0], table)
 
 
 
@@ -545,20 +570,30 @@ def sendNextActions(table): # TODO : TO TEST
     tmpMission = currentMission - 1
     while isinstance(path, bool):
         tmpMission += 1 # raise error if no mission is possible.. of wait 2-2
-        # preceed tests
+        
+        #rewind when finished
         if tmpMission == len(missions):
-            message("Finished all missions!", colors.BLUE)
-            sys.exit()
-        if missions[tmpMission][2] == 1:
-            path = findPath(table, missions[tmpMission][0])
-        elif missions[tmpMission][2] == 2:
-            path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
-            if isinstance(path, bool):
-                putDown(missions[tmpMission][0], table)
+            tmpMission, currentMission = 0, 0 
+            
+        message("In pregress : " + str(missions[tmpMission][0]), colors.RESET)
+        # preceed tests
+        if missions[tmpMission][1].getX() != 0 or missions[tmpMission][1].getY() != 0: # skip dummy missions
+            if missions[tmpMission][2] == 1:
+                message("In the way to the element ..." , colors.RESET)
+                path = findPath(table, missions[tmpMission][0])
+            elif missions[tmpMission][2] == 2:
+                message("In the way to the final target ..." , colors.RESET)
+                path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
+                if isinstance(path, bool):
+                    putDown(missions[tmpMission][0], table)
     
     currentMission = tmpMission
         
+    if len(path) == 0:
+        path.append((int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)))
+    
     path.reverse() # TODO
+    
     #sending actions
     
     #proceed with the first part of the path
@@ -571,7 +606,7 @@ def sendNextActions(table): # TODO : TO TEST
         firstPart.append(path[i])
         if i == len(path) - 1:
             theEnd = True
-    
+
     draw(np.array(path), table)
     undraw(np.array(path), table)
     
@@ -616,7 +651,7 @@ def sendNextActions(table): # TODO : TO TEST
         
         missions[currentMission][2] = 2
         
-    if not actionComplete(response):
+    if not actionComplete(response) and missions[currentMission][2] == 2:
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
         response = response[:13] + "00000000"
         putDown(missions[currentMission][0], table)
@@ -626,6 +661,8 @@ def sendNextActions(table): # TODO : TO TEST
 
 def grab(element, table):
     deleteElement(element, table)
+    if element.getDiameter() == 0.0 and isinstance(element.getLabel() , int): # means an atom
+         element.setDiameter(atomDiameter)
     cr.grab()
     
 
@@ -700,18 +737,17 @@ def action():
     while time.time() - startTime < 100:
                 
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
-        draw(np.array([]), tableDisposition)
         actionScore, actionResponse = sendNextActions(tableDisposition)
         
-        # TODO
-        #draw(np.array([]), tableDisposition)
-        
+       
         if actionScore == -1 :
             raise ValueError('Error in actionScore!')
         else:
             score += actionScore
             
             message("Success! current score is " + str(score) + " pts", colors.GREEN)
+    
+    message("Time Over! ", colors.BLUE)
                         
             
 

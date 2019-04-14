@@ -40,9 +40,8 @@ def moveForward(d):
     intD = int(d*1000)
     res = "1000000000000"
     
-    if counter == 5:
-        print("obstacle*****************")
-        res = "0000002050000"
+    if counter == 15:
+        res = "1000003050000"
     
     counter += 1
     
