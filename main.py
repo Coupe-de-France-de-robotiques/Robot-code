@@ -27,9 +27,9 @@ maxRobotDiameter = 0.2 #in meters
 numberOfOpponentRobots = 2 #to be set at the begining of the game
 idIncrement = 0 #to automaticlly set atoms ids
 # @@@@@@@@ For sim @@@@@@@@@
-currentMission = -1 # ? nothing ; index of an element of the array missions
+currentMission = 0 # ? nothing ; index of an element of the array missions
 # @@@@@@@@ End for sim @@@@@@@@@
-displayMessages = False # display print in the program of not
+displayMessages = True # display print in the program of not
 Atoms = []
 
 # Classes 
@@ -68,6 +68,8 @@ class robot (element):
         self.__theta = round(theta, 3)
     def setDiameter(self, diameter):
         self.__diameter = round(diameter, 3)
+    def __str__(self):
+        return str(self.getLabel()) + "(x = " + str(self.getX()) + ", y = " + str(self.getY()) + ", theta = " + str(self.getDir()) + ")"
 
 class atom (element):
     def __init__(self, x, y, label, diameter = atomDiameter):
@@ -84,10 +86,14 @@ class atom (element):
     def setDiameter(self, diameter):
         self.__diameter = round(diameter,3)
     
-class point (element):
-    def __init__(self, x , y):
-        element.__init__(self, x, y, 0.0, "Point")
+class target (element):
+    def __init__(self, x , y, finalRobotOrientation):
+        element.__init__(self, x, y, 0.0, "target")
+        self.__finalRobotOrientation = finalRobotOrientation
+    def getFinalRobotOrientation(self):
+        return self.__finalRobotOrientation
     
+        
 class colors:
     BLACK   = '\033[1;30m'
     RED     = '\033[1;31m'
@@ -118,19 +124,17 @@ atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGo
         atom(0.5, 0.75, 1),
         atom(0.5, 1.05, 2),
         
-        
          #in the central cercles : ours
-        atom(1, 1.05 + atomDiameter*1.5, 1),
-        atom(1, 1.05 - atomDiameter*1.5, 3),
-        atom(1 - atomDiameter*1.5 , 1.05, 2),
-        atom(1 + atomDiameter*1.5 , 1.05, 1),
-        
+        atom(1, 1.05 + atomDiameter*1.5, 1), #right
+        atom(1, 1.05 - atomDiameter*1.5, 3), #left
+        atom(1 - atomDiameter*1.5 , 1.05, 2), #down
+        atom(1 + atomDiameter*1.5 , 1.05, 1), #up
         
          #in the central cercles : theirs
-        atom(2 - atomDiameter/2 , 1.05 - atomDiameter*1.5, 1),
-        atom(2 - atomDiameter/2 , 1.05, 2),
-        atom(2 + atomDiameter/2 , 1.05, 3),
-        atom(2 , 1.05 + atomDiameter, 1),
+        atom(2 - atomDiameter/2 , 1.05 - atomDiameter*1.5, 1), #left
+        atom(2 - atomDiameter/2 , 1.05, 2), #down
+        atom(2 + atomDiameter/2 , 1.05, 3), #up
+        atom(2 , 1.05 + atomDiameter, 1), #right
         
          #near table of elements : theirs
         atom(2.5 , 0.45, 1),
@@ -180,45 +184,51 @@ atomsDisposition = np.array( #red (1) green (2) bleu(3) ourGoldonium(-1) thierGo
         )
 
 # TODO : ADD SCORES AND UPDATE POSITIONS AND START FROM ATOMS WE WILL NOT USE TO ATOMS OF OPPONENET
+space = 0.02
 missions = np.array([ #[atom, target , stage, score]
-        [Atoms[0], point(0.225, 0.45), 1, 0], # 1 is for the first part of the mission (robot->atom) and 2 for the second (robot+atom -> target) than 3 for done
-        [Atoms[1], point(0.225, 0.45), 1 , 0],
-        [Atoms[2], point(0.225, 0.45), 1 , 0],
-        [Atoms[3], point(0.225, 0.45), 1],
-        [Atoms[4], point(0.225, 0.45), 1],
-        [Atoms[5], point(0.225, 0.45), 1],
-        [Atoms[6], point(0.225, 0.45), 1],
-        [Atoms[7], point(0.225, 0.45), 1],
-        [Atoms[8], point(0.225, 0.45), 1],
-        [Atoms[9], point(0.225, 0.45), 1],
-        [Atoms[10], point(0.225, 0.45), 1],
-        [Atoms[11], point(0.225, 0.45), 1],
-        [Atoms[12], point(0.225, 0.45), 1],
-        [Atoms[13], point(0.225, 0.45), 1],
-        [Atoms[14], point(0.225, 0.45), 1],
-        [Atoms[15], point(0.225, 0.45), 1],
-        [Atoms[16], point(0.225, 0.45), 1],
-        [Atoms[17], point(0.225, 0.45), 1],
-        [Atoms[18], point(0.225, 0.45), 1],
-        [Atoms[19], point(0.225, 0.45), 1],
-        [Atoms[20], point(0.225, 0.45), 1],
-        [Atoms[21], point(0.225, 0.45), 1],
-        [Atoms[22], point(0.225, 0.45), 1],
-        [Atoms[23], point(0.225, 0.45), 1],
-        [Atoms[24], point(0.225, 0.45), 1],
-        [Atoms[25], point(0.225, 0.45), 1],
-        [Atoms[26], point(0.225, 0.45), 1],
-        [Atoms[27], point(0.225, 0.45), 1],
-        [Atoms[28], point(0.225, 0.45), 1],
-        [Atoms[29], point(0.225, 0.45), 1],
-        [Atoms[30], point(0.225, 0.45), 1],
-        [Atoms[31], point(0.225, 0.45), 1],
-        [Atoms[32], point(0.225, 0.45), 1],
-        [Atoms[33], point(0.225, 0.45), 1],
-        [Atoms[34], point(0.225, 0.45), 1],
-        [Atoms[35], point(0.225, 0.45), 1],
-        [Atoms[36], point(0.225, 0.45), 1],
-        [Atoms[37], point(0.225, 0.45), 1],
+        [Atoms[0], target(atomDiameter + space + margin, 0.45, np.pi), 1, 6], # 1 is for the first part of the mission (robot->atom) and 2 for the second (robot+atom -> target) than 3 for done
+        [Atoms[1], target(2*(atomDiameter + space) + margin, 0.45, np.pi), 1 , 6],
+        [Atoms[2], target(atomDiameter + space + margin, 0.75, np.pi), 1 , 6],
+        
+        [Atoms[3], target(3*(atomDiameter + space)  + margin, 0.45, np.pi), 1, 6],
+        [Atoms[4], target(atomDiameter + space  + margin, 1.05, np.pi), 1, 6],
+        [Atoms[5], target(2*(atomDiameter + space)  + margin, 0.75, np.pi), 1, 6],
+        [Atoms[6], target(4*(atomDiameter + space)  + margin, 0.45, np.pi), 1, 6],
+        
+#        [Atoms[7], target(5*(atomDiameter + space), 0.45), 1, 6],
+#        [Atoms[8], target(3*(atomDiameter + space), 0.75), 1, 6],
+#        [Atoms[9], target(2*(atomDiameter + space), 1.05), 1, 6],
+#        [Atoms[10], target(6*(atomDiameter + space), 0.45), 1, 6],
+        
+#        [Atoms[11], target(atomDiameter + space, 0.45, np.pi), 1],
+#        [Atoms[12], target(2*(atomDiameter + space), 0.45, np.pi), 1],
+#        [Atoms[13], target(atomDiameter + spcae, 0.75), 1],
+        
+        [Atoms[14], target(1.4 - margin - atomDiameter, 1.8, 0), 1, 8],
+        [Atoms[15], target(1.6 + margin + atomDiameter, 1.8, np.pi), 1, 8],
+        
+#        [Atoms[16], target(), 1, 6],
+#        [Atoms[17], target(), 1, 6],
+#        [Atoms[18], target(), 1, 6],
+#        [Atoms[19], target(), 1, 6],
+#        [Atoms[20], target(), 1, 6],
+#        [Atoms[21], target(), 1, 6],
+#        [Atoms[22], target(), 1, 6],
+#        [Atoms[23], target(), 1, 6],
+#        [Atoms[24], target(), 1, 6],
+#        [Atoms[25], target(), 1, 6],
+#        [Atoms[26], target(), 1, 6],
+#        [Atoms[27], target(), 1, 6],
+#        [Atoms[28], target(), 1, 6],
+#        [Atoms[29], target(), 1, 6],
+#        [Atoms[30], target(), 1, 6],
+#        [Atoms[31], target(), 1, 6],
+#        [Atoms[32], target(), 1, 6],
+#        [Atoms[33], target(), 1, 6],
+#        [Atoms[34], target(), 1, 6],
+#        [Atoms[35], target(), 1, 6],
+        [Atoms[36], target(1.4, 1.8, 0), 1, 30],
+#        [Atoms[37], target(0.225, 0.45), 1],
         ])
 
 
@@ -254,9 +264,13 @@ for y in range(0, 2*ratio):
 
 
 
-def message(message):
+def message(message, color):
     global displayMessages
-    if displayMessages: print(message)
+    if displayMessages: 
+        sys.stdout.write(color)
+        print(message)
+        sys.stdout.write(colors.RESET)
+        
 
 
       
@@ -301,13 +315,9 @@ def addElement(element, table): #returns 1 if successful and -1 if not
             
     if warning :
         if isinstance(element.getLabel(), int):
-            sys.stdout.write(colors.RED)
-            message("Warning! : Some of the cells used in atom " + str(element.getId()) + " were already occupied")
-            sys.stdout.write(colors.RESET)
+            message("Warning! : Some of the cells used in atom " + str(element.getId()) + " were already occupied", colors.RED)
         else:
-            sys.stdout.write(colors.RED)
-            message("Warning! : Some of the cells used in the robot " + element.getLabel() + " were already occupied")
-            sys.stdout.write(colors.RESET)
+            message("Warning! : Some of the cells used in the robot " + element.getLabel() + " were already occupied", colors.RED)
     return 1      
 
 
@@ -343,9 +353,7 @@ def addAtoms(atoms, table): #returns 1 if successful and -1 if not
         if addElement(atom, table) == -1:
             table = oldCopy
             return -1
-    sys.stdout.write(colors.GREEN)
-    message("Ok! Atoms successfuly added")
-    sys.stdout.write(colors.RESET)
+    message("Ok! Atoms successfuly added", colors.GREEN)
     return 1
 
 
@@ -369,18 +377,15 @@ def initializeTable(atomsDisposition, ourRobot, opponentFirstRobot, opponentSeco
     
     #if addElement(ourRobot, table) == -1 : message("ERROR WHILE ADDING OUR ROBOT TO THE TABLE")
     
-    if addElement(opponentFirstRobot, table) == -1 : message("ERROR WHILE ADDING THEIR FIRST ROBOT TO THE TABLE")
+    if addElement(opponentFirstRobot, table) == -1 : message("ERROR WHILE ADDING THEIR FIRST ROBOT TO THE TABLE", colors.RED)
     if opponentSecondRobot != None:
-        if addElement(opponentSecondRobot, table) == -1 : message("ERROR WHILE ADDING THEIR SECOND ROBOT TO THE TABLE")
-    if addAtoms(atomsDisposition, table)  == -1 : message("ERROR WHILE ADDING ATOMS TO THE TABLE")
+        if addElement(opponentSecondRobot, table) == -1 : message("ERROR WHILE ADDING THEIR SECOND ROBOT TO THE TABLE", colors.RED)
+    if addAtoms(atomsDisposition, table)  == -1 : message("ERROR WHILE ADDING ATOMS TO THE TABLE", colors.RED)
     
     #deleting table margins
     #table = table[int(maxRobotDiameter/2 *ratio):len(table-int(maxRobotDiameter/2 *ratio)),int(maxRobotDiameter/2 *ratio):len(table[0]-int(maxRobotDiameter/2 *ratio)) ]
     
-    sys.stdout.write(colors.GREEN)
-    message("Ok! Table successfuly initialized")
-    sys.stdout.write(colors.RESET)
-    
+    message("Ok! Table successfuly initialized", colors.GREEN)    
     
     return table
 
@@ -417,12 +422,13 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
             Atoms[i].setX(x)
             Atoms[i].setY(y)
     else:
+
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
         elements = theRobotIsLookingAt(getCaptorsData(response))
         for elementData in elements:
             updatePosition(elementData, ourRobot, table)
 
-    message("Table state updated...")
+    message("Table state updated...", colors.RESET)
     
 
 
@@ -498,22 +504,23 @@ def getExpXY(elementData, ourRobot, pltShow = False, R = ourRobot.getDiameter() 
     else:
         return x1, y1
 
-        
 
-def updateOurRobotPosition(traveledDistance, rotationAngle, ourRobot): 
-        
+def updateOurRobotPosition(traveledDistance, rotationAngle, ourRobot):
     theta = rotationAngle + ourRobot.getDir()
+    if theta < - np.pi:
+        theta = 2 * np.pi + theta
+    elif theta > np.pi:
+        theta = - 2 * np.pi + theta
     X = ourRobot.getX() + traveledDistance * np.cos(theta)
     Y = ourRobot.getY() + traveledDistance * np.sin(theta)
-        
+    
     ourRobot.setX(X)
     ourRobot.setY(Y)
     ourRobot.setDir(theta)
 
 
+def sendNextActions(table): # TODO : TO TEST
 
-def sendNextActions(table):
-    
     """
     given tableDisposition and currMission we do:
         1 - if currentMission is feasible do:
@@ -529,53 +536,99 @@ def sendNextActions(table):
             2-2 - if not:
                 wait some time (1s for example and retry)
                 raise an error after (5s for example)
-                
+
     """
     
     global currentMission
     
-    #1 / 2
     path = False
-    tmpMission = currentMission - 1;
+    tmpMission = currentMission - 1
     while isinstance(path, bool):
         tmpMission += 1 # raise error if no mission is possible.. of wait 2-2
-        
         # preceed tests
+        if tmpMission == len(missions):
+            message("Finished all missions!", colors.BLUE)
+            sys.exit()
         if missions[tmpMission][2] == 1:
             path = findPath(table, missions[tmpMission][0])
         elif missions[tmpMission][2] == 2:
-            path = findPath(table, missions[tmpMission][1])
-
+            path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))            
+    
     currentMission = tmpMission
-    
-    
+        
+    path.reverse() # TODO
     #sending actions
     
     #proceed with the first part of the path
+    theEnd = False
+    if len(path) == 1: 
+        theEnd = True
     firstPart = [(int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), path[0]]
     for i in range(1,len(path)):
         if (path[i][0] - firstPart[i][0] != firstPart[i][0] - firstPart[i-1][0]) or (path[i][1] - firstPart[i][1] != firstPart[i][1] - firstPart[i-1][1]): break
         firstPart.append(path[i])
-            
+        if i == len(path) - 1:
+            theEnd = True
+    
         #rotation
     theta = getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), path[0])
+    
+    
+    response = ""
     if ourRobot.getDir() > theta:
-        cr.turnRight(ourRobot.getDir() - theta)
+        response = cr.turnRight(ourRobot.getDir() - theta)
     elif ourRobot.getDir() < theta:
-        cr.turnLeft(ourRobot.getDir() - theta)
+        response = cr.turnLeft(theta - ourRobot.getDir())
+    else:
+        response += "0000"
     
         #translation
-    response = cr.moveForward(np.sqrt(np.power(path[-1][0] - int(ourRobot.getX()*ratio) , 2) + np.power(path[-1][1] - int(ourRobot.getY()*ratio) , 2)) / float(ratio))
-    
-    if len(path) == 1 and missions[currentMission][2] == 1 and actionComplete(response):
-        cr.grab()
+    response = cr.moveForward(np.sqrt((firstPart[-1][0] - int(ourRobot.getX()*ratio))**2 + (firstPart[-1][1] - int(ourRobot.getY()*ratio))**2) / float(ratio)) + response
     
     score = 0
-    if len(path) == 1 and missions[currentMission][2] == 2 and actionComplete(response):
+    if theEnd and missions[currentMission][2] == 2 and actionComplete(response):
+        theta = missions[currentMission][1].getFinalRobotOrientation()
+        if ourRobot.getDir() > theta:
+            cr.turnRight(ourRobot.getDir() - theta)
+        elif ourRobot.getDir() < theta:
+            cr.turnLeft(theta - ourRobot.getDir())
+        
+        updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+        updateOurRobotPosition(0, theta - ourRobot.getDir(), ourRobot)
+        response = response[:13] + "00000000"
+        
+        putDown(missions[currentMission][0], table)
+        
+        missions[currentMission][2] = 3
         score = missions[currentMission][3]
+        
+    if theEnd and missions[currentMission][2] == 1 and actionComplete(response):
+        grab(missions[currentMission][0], table)
+        missions[currentMission][2] = 2
+        
+    if not actionComplete(response):
+        updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+        response = response[:13] + "00000000"
+        putDown(missions[currentMission][0], table)
     
-    #response = "99999999900000000" # Arduino's response after sending action
     return score, response # score != 0 only if the next action is the final action of an operation and response is the string sent by arduino
+
+
+def grab(element, table):
+    deleteElement(element, table)
+    cr.grab()
+    
+
+def putDown(element, table):
+    global margin
+    
+    if ourRobot.getDir() == 0. :
+        element.setX(ourRobot.getX() + margin + element.getDiameter()/2. + 1./ratio)
+    else:
+        element.setX(ourRobot.getX() - margin - element.getDiameter()/2. - 1./ratio)
+    element.setY(ourRobot.getY())
+    addElement(element, table)
+    cr.putDown()
 
 def actionComplete(response): # returns a boolean saying if response indicates that the action was interupted (false) or not (true)
     return int(response[0]) == 1
@@ -587,11 +640,10 @@ def getTraveledDistance(response):
     return int(response[13:17]) / 1000.
 
 def getRotationAngle(response):
-    if int(response[17:21]) <= np.pi: 
+    if int(response[17:21]) / 1000. <= np.pi: 
         return int(response[17:21]) / 1000.
     else:
         return - round((2*np.pi - int(response[17:21]) / 1000.),3)
-
 
 
 def findPath(table, target):
@@ -615,13 +667,16 @@ def findPath(table, target):
     for borderElement in border:
         path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(borderElement[0]), int(borderElement[1])))
         if not isinstance(path, bool):
+            # TODO : delete this
+            draw(np.array(path), table)
+            undraw(np.array(path),table)
             return path
     return False
 
 
 def initialRespose(): # returns initial default response (needed ???)
     # TODO : DEPENDS ON RESPONSE FORM
-    return "100000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
+    return "000000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
 
 #################################################### Main loop #################################################### 
     
@@ -637,18 +692,20 @@ def action():
     score = 0
     
     while time.time() - startTime < 100:
-        
+                
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
         actionScore, actionResponse = sendNextActions(tableDisposition)
+        
+        # TODO
+        draw(np.array([]), tableDisposition)
+        
         if actionScore == -1 :
             raise ValueError('Error in actionScore!')
         else:
             score += actionScore
             
-            sys.stdout.write(colors.GREEN)
-            message("Success! current score is " + str(score) + " pts")
-            sys.stdout.write(colors.RESET)
-            
+            message("Success! current score is " + str(score) + " pts", colors.GREEN)
+                        
 
 #################################################### for tests #################################################### 
    
@@ -659,5 +716,10 @@ def draw(path, table):
     plt.figure(figsize=(7,8))
     plt.imshow(table)
     plt.show()
+    
+    
+def undraw(path, table):
+    for i,j in path:
+        table[i,j] = 0
 
-#action()
+action()

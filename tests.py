@@ -29,6 +29,9 @@ def test3(i):
         
 def test4_sub(i):
     empty = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
+    mn.ourRobot.setX(0.402)
+    mn.ourRobot.setY(0.56)
+    mn.ourRobot.setDir(-2.357)
     mn.draw(mn.findPath(empty, mn.Atoms[i]), empty)
 
 
@@ -51,6 +54,7 @@ def test6():
     print(mn.ourRobot.getX(), mn.ourRobot.getY(), mn.ourRobot.getDir())
     mn.updateOurRobotPosition(0.2, np.pi / 2 , mn.ourRobot)
     print(mn.ourRobot.getX(), mn.ourRobot.getY(), mn.ourRobot.getDir())
+    mn.updateOurRobotPosition(-0.2, - np.pi / 2 , mn.ourRobot)
 
 
 # Test getExpXY
@@ -84,7 +88,7 @@ def test8():
 # Test theRobotIsLookingAt
 
 def test9():
-    response = "0000408000000"
+    response = "000000206000507005759"
     result = mn.theRobotIsLookingAt(mn.getCaptorsData(response))
     print(result)
    
@@ -109,4 +113,4 @@ def test10():
 #test9()
 #test10()
 
-#action()
+#mn.action()
