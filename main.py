@@ -36,9 +36,9 @@ Atoms = []
 
 class element:
     def __init__(self, x, y, diameter, label):
-        self.__x = round(x, 3)
-        self.__y = round(y, 3)
-        self.__diameter = round(diameter, 3)
+        self.__x = x
+        self.__y = y
+        self.__diameter = diameter
         self.__label = label # use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one    
     def __str__(self):
         return str(self.__label) + "(x = " + str(self.__x) + ", y = " + str(self.__y) + ")"
@@ -51,23 +51,23 @@ class element:
     def getLabel(self):
         return self.__label;
     def setX(self, x):
-        self.__x = round(x,3)
+        self.__x = x
     def setY(self, y):
-        self.__y = round(y,3)
+        self.__y = y
     def setLabel(self, label):
         self.__label = label
 
 class robot (element):
     def __init__(self, x, y, diameter, v, theta, label): # for label use "theirs1" for opponenet's first robot and "theirs2" for their second one if there is one
         element.__init__(self, x, y, diameter, label)
-        self.__v = round(v, 3)
-        self.__theta = round(theta, 3)
+        self.__v = v
+        self.__theta = theta
     def getDir(self):
         return self.__theta
     def setDir(self, theta):
-        self.__theta = round(theta, 3)
+        self.__theta = theta
     def setDiameter(self, diameter):
-        self.__diameter = round(diameter, 3)
+        self.__diameter = diameter
     def __str__(self):
         return str(self.getLabel()) + "(x = " + str(self.getX()) + ", y = " + str(self.getY()) + ", theta = " + str(self.getDir()) + ")"
 
@@ -84,7 +84,7 @@ class atom (element):
     def setId(self, Id):
         self.__id = Id
     def setDiameter(self, diameter):
-        self.__diameter = round(diameter,3)
+        self.__diameter = diameter
     
 class target (element):
     def __init__(self, x , y, finalRobotOrientation):
@@ -622,11 +622,9 @@ def grab(element, table):
 def putDown(element, table):
     global margin
     
-    if ourRobot.getDir() == 0. :
-        element.setX(ourRobot.getX() + margin + element.getDiameter()/2. + 1./ratio)
-    else:
-        element.setX(ourRobot.getX() - margin - element.getDiameter()/2. - 1./ratio)
-    element.setY(ourRobot.getY())
+    element.setX(ourRobot.getX() + (margin + element.getDiameter()/2. + 1./ratio) * np.cos(ourRobot.getDir()))
+    element.setY(ourRobot.getY() + (margin + element.getDiameter()/2. + 1./ratio) * np.sin(ourRobot.getDir()))
+    
     addElement(element, table)
     cr.putDown()
 
@@ -668,8 +666,6 @@ def findPath(table, target):
         path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(borderElement[0]), int(borderElement[1])))
         if not isinstance(path, bool):
             # TODO : delete this
-            draw(np.array(path), table)
-            undraw(np.array(path),table)
             return path
     return False
 
@@ -706,17 +702,36 @@ def action():
             
             message("Success! current score is " + str(score) + " pts", colors.GREEN)
                         
+            
 
 #################################################### for tests #################################################### 
    
 def draw(path, table):
     for i,j in path:
         table[i,j] = 7
+        
+    for i, j in itertools.product(range(- int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2), range(-int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2)):
+        if ellipse(i, j , ourRobot.getDir(), int(ourRobot.getDiameter()*ratio) // 2):
+            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] += 5
 
-    plt.figure(figsize=(7,8))
+    plt.figure(figsize=(8,9))
     plt.imshow(table)
     plt.show()
     
+    for i, j in itertools.product(range(- int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2), range(-int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2)):
+        if ellipse(i, j , ourRobot.getDir(), int(ourRobot.getDiameter()*ratio) // 2):
+            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] -= 5
+    
+def ellipse(i, j , t, R):
+    if t == 0:
+        cond = i >= 0
+    elif t == -np.pi or t == np.pi:
+        cond = i <= 0
+    elif t > 0:
+        cond = j >= (-1./np.tan(t)) *i
+    else:
+        cond = j <= (-1./np.tan(t)) *i
+    return ((i*np.cos(t) + j*np.sin(t))/3)**2 + ((j*np.cos(t) - i*np.sin(t))/1)**2 <= R and cond
     
 def undraw(path, table):
     for i,j in path:
