@@ -33,14 +33,18 @@ def turnLeft(theta):
     else:
         return str(res)
 
-
+counter = 0
 def moveForward(d):
+    global counter
     # TODO
     intD = int(d*1000)
     res = "1000000000000"
     
-    #if d == 0.01414213562373095:
-    #    res = "0000002050000"
+    if counter == 5:
+        print("obstacle*****************")
+        res = "0000002050000"
+    
+    counter += 1
     
     if intD == 0:
         return res + "0000"

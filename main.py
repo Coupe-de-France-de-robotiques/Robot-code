@@ -227,7 +227,7 @@ missions = np.array([ #[atom, target , stage, score]
 #        [Atoms[33], target(), 1, 6],
 #        [Atoms[34], target(), 1, 6],
 #        [Atoms[35], target(), 1, 6],
-        [Atoms[36], target(1.4, 1.8, 0), 1, 30],
+        [Atoms[36], target(1.4 - margin - 2 * atomDiameter, 1.8, 0), 1, 30],
 #        [Atoms[37], target(0.225, 0.45), 1],
         ])
 
@@ -552,7 +552,12 @@ def sendNextActions(table): # TODO : TO TEST
         if missions[tmpMission][2] == 1:
             path = findPath(table, missions[tmpMission][0])
         elif missions[tmpMission][2] == 2:
-            path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))            
+            path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
+            if isinstance(path, bool):
+                putDown(missions[tmpMission][0], table)
+                print("gygyigiggygyigiggygyigiggygyigiggygyigiggygyigiggygyigig")
+                print(int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio))
+                print(int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio))
     
     currentMission = tmpMission
         
@@ -569,6 +574,9 @@ def sendNextActions(table): # TODO : TO TEST
         firstPart.append(path[i])
         if i == len(path) - 1:
             theEnd = True
+    
+    draw(np.array(path), table)
+    undraw(np.array(path), table)
     
         #rotation
     theta = getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), path[0])
@@ -690,10 +698,11 @@ def action():
     while time.time() - startTime < 100:
                 
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
+        draw(np.array([]), tableDisposition)
         actionScore, actionResponse = sendNextActions(tableDisposition)
         
         # TODO
-        draw(np.array([]), tableDisposition)
+        #draw(np.array([]), tableDisposition)
         
         if actionScore == -1 :
             raise ValueError('Error in actionScore!')
@@ -708,11 +717,11 @@ def action():
    
 def draw(path, table):
     for i,j in path:
-        table[i,j] = 7
+        table[i,j] += 7
         
     for i, j in itertools.product(range(- int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2), range(-int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2)):
         if ellipse(i, j , ourRobot.getDir(), int(ourRobot.getDiameter()*ratio) // 2):
-            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] += 5
+            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] += 3
 
     plt.figure(figsize=(8,9))
     plt.imshow(table)
@@ -720,7 +729,7 @@ def draw(path, table):
     
     for i, j in itertools.product(range(- int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2), range(-int(ourRobot.getDiameter()*ratio) // 2, int(ourRobot.getDiameter()*ratio) // 2)):
         if ellipse(i, j , ourRobot.getDir(), int(ourRobot.getDiameter()*ratio) // 2):
-            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] -= 5
+            table[i + int(ourRobot.getX()*ratio) ,j + int(ourRobot.getY()*ratio)] -= 3
     
 def ellipse(i, j , t, R):
     if t == 0:
@@ -735,6 +744,6 @@ def ellipse(i, j , t, R):
     
 def undraw(path, table):
     for i,j in path:
-        table[i,j] = 0
+        table[i,j] -= 7
 
 action()

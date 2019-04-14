@@ -7,7 +7,7 @@ Path finding algorithm in a graph of nodes
 import heapq as hp
 import time
 
-timeLimit = 500 # in miliseconds
+timeLimit = 1000 # in miliseconds
 
 def heuristic(a, b):
     return (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
