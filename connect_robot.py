@@ -33,17 +33,11 @@ def turnLeft(theta):
     else:
         return str(res)
 
-counter = 0
+
 def moveForward(d):
-    global counter
     # TODO
     intD = int(d*1000)
     res = "1000000000000"
-    
-    if counter == 15:
-        res = "1000003050000"
-    
-    counter += 1
     
     if intD == 0:
         return res + "0000"

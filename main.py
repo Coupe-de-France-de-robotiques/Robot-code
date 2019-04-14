@@ -22,8 +22,8 @@ import copy as cp
 # TODO : SET VALUES
 camera = False
 ratio = 100 #means 1m = ratio points in the matrix
-atomDiameter = 0.07 #in meters
-maxRobotDiameter = 0.3 #in meters
+atomDiameter = 0.08 #in meters
+maxRobotDiameter = 0.2 #in meters
 numberOfOpponentRobots = 2 #to be set at the begining of the game
 idIncrement = 0 #to automaticlly set atoms ids
 # @@@@@@@@ For sim @@@@@@@@@
@@ -692,16 +692,16 @@ def getRotationAngle(response):
 
 
 def findPath(table, target):
-        
+    
     global margin
     
     border = []
-    x = int(target.getX()*ratio)
-    y = int(target.getY()*ratio)
-    mrg = int((target.getDiameter()/2. + margin)*ratio)
+    x = target.getX()*ratio
+    y = target.getY()*ratio
+    mrg = (target.getDiameter()/2. + margin)*ratio
     
     #ordring borders to begin with the neighrest to the robot
-    tmp = [(x + mrg + 1, y), (x - mrg - 1, y), (x, y + mrg + 1), (x, y - mrg -1)]
+    tmp = [(int(x + mrg) + 1, int(y)), (int(x - mrg) - 1, int(y)), (int(x), int(y + mrg) + 1), (int(x), int(y - mrg) -1)]
     tmp.sort(key = lambda t : np.power(int(ourRobot.getX()*ratio) - t[0], 2) + np.power(int(ourRobot.getY()*ratio) - t[1], 2))
     
     for i,j in tmp:
@@ -712,7 +712,6 @@ def findPath(table, target):
     for borderElement in border:
         path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(borderElement[0]), int(borderElement[1])))
         if not isinstance(path, bool):
-            # TODO : delete this
             return path
     return False
 
@@ -734,7 +733,14 @@ def action():
     actionResponse = initialRespose() #string sent by arduino
     score = 0
     
+    # TODO : for fun
+    bol = True
+    
     while time.time() - startTime < 100:
+        
+        if time.time() - startTime > 10 and bol:
+            actionResponse = actionResponse[:1] + "0104" + actionResponse[5:]
+            bol = False
                 
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
         actionScore, actionResponse = sendNextActions(tableDisposition)

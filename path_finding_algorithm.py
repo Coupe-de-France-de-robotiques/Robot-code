@@ -7,7 +7,7 @@ Path finding algorithm in a graph of nodes
 import heapq as hp
 import time
 
-timeLimit = 500 # in miliseconds
+timeLimit = 5000 # in miliseconds
 
 def heuristic(a, b):
     return (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2
@@ -27,7 +27,9 @@ def astar(array, start, goal):
 
     hp.heappush(oheap, (fscore[start], start))
     
-    while oheap :# and (time.time() - startTime <= timeLimit / 1000.):
+    while oheap :
+        
+        #if time.time() - startTime > timeLimit / 1000.: break
 
         current = hp.heappop(oheap)[1]
 
