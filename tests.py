@@ -5,6 +5,7 @@ Fichier de tests
 """
 import main as mn
 import numpy as np
+import path_finding_algorithm as pfa
 
 # Test adding atoms
 
@@ -100,6 +101,23 @@ def test10():
     mn.updateTable(table, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot, mn.atomsDisposition, response)   
     mn.draw(np.array([]), table)
 
+# Test accessibleNeighboors
+
+def test11():
+    table = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
+    dx, dy = 50, 20
+    start = [(100, 50), None]
+    print(pfa.accessibleNeighboors(start, table, dx, dy))
+    
+# Test algorithm
+    
+def test12():
+    table = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
+    start, end = (22, 75), (50,60)
+    path = pfa.algorithm(table, start, end)    
+    print(path)
+    mn.draw(np.array(path), table)
+        
 # TESTS
 
 #test1(17)
@@ -112,5 +130,6 @@ def test10():
 #test8()
 #test9()
 #test10()
+#test12()
 
-#mn.action()
+mn.action()

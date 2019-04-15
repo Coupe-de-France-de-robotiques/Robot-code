@@ -12,7 +12,6 @@ import connect_camera as cc
 import matplotlib.pyplot as plt
 import sys
 import itertools
-import random
 import copy as cp
 
 
@@ -544,7 +543,7 @@ def updateOurRobotPosition(traveledDistance, rotationAngle, ourRobot):
     ourRobot.setDir(theta)
 
 
-def sendNextActions(table): # TODO : TO TEST
+def sendNextActions(table):
 
     """
     given tableDisposition and currMission we do:
@@ -575,15 +574,15 @@ def sendNextActions(table): # TODO : TO TEST
         if tmpMission == len(missions):
             tmpMission, currentMission = 0, 0 
             
-        message("In pregress : " + str(missions[tmpMission][0]), colors.RESET)
+        #message("In pregress : " + str(missions[tmpMission][0]), colors.RESET)
         # preceed tests
         if missions[tmpMission][1].getX() != 0 or missions[tmpMission][1].getY() != 0: # skip dummy missions
             if missions[tmpMission][2] == 1:
-                message("In the way to the element ..." , colors.RESET)
+                #message("In the way to the element ..." , colors.RESET)
                 path = findPath(table, missions[tmpMission][0])
             elif missions[tmpMission][2] == 2:
-                message("In the way to the final target ..." , colors.RESET)
-                path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
+                #message("In the way to the final target ..." , colors.RESET)
+                path = pfa.algorithm(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(missions[tmpMission][1].getX()*ratio), int(missions[tmpMission][1].getY()*ratio)))
                 if isinstance(path, bool):
                     putDown(missions[tmpMission][0], table)
     
@@ -592,7 +591,7 @@ def sendNextActions(table): # TODO : TO TEST
     if len(path) == 0:
         path.append((int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)))
     
-    path.reverse() # TODO
+    path.reverse()
     
     #sending actions
     
@@ -707,17 +706,16 @@ def findPath(table, target):
     for i,j in tmp:
         if i < len(table) - 1 and i > 0 and j < len(table[0]) - 1 and j > 0:
             if table[i][j] == 0.:
-                border.append((i,j))    
+                border.append((i,j))
         
     for borderElement in border:
-        path = pfa.astar(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(borderElement[0]), int(borderElement[1])))
+        path = pfa.algorithm(table, (int(ourRobot.getX()*ratio), int(ourRobot.getY()*ratio)), (int(borderElement[0]), int(borderElement[1])))
         if not isinstance(path, bool):
             return path
     return False
 
 
 def initialRespose(): # returns initial default response (needed ???)
-    # TODO : DEPENDS ON RESPONSE FORM
     return "000000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
 
 #################################################### Main loop #################################################### 
@@ -733,16 +731,16 @@ def action():
     actionResponse = initialRespose() #string sent by arduino
     score = 0
     
-    # TODO : for fun
     bol = True
     
     while time.time() - startTime < 100:
         
-        if time.time() - startTime > 10 and bol:
-            actionResponse = actionResponse[:1] + "0104" + actionResponse[5:]
-            bol = False
+#        if time.time() - startTime > 5 and bol:
+#            actionResponse = actionResponse[:1] + "0104" + actionResponse[5:]
+#            bol = False
                 
         updateTable(tableDisposition, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsDisposition, actionResponse)
+        draw(np.array([]), tableDisposition)
         actionScore, actionResponse = sendNextActions(tableDisposition)
         
        
@@ -789,5 +787,3 @@ def ellipse(i, j , t, R):
 def undraw(path, table):
     for i,j in path:
         table[i,j] -= 7
-
-action()
