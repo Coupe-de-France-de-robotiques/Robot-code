@@ -8,19 +8,19 @@ Created on Tue Apr  9 15:37:24 2019
 
 def getRobotPosition():
     # TODO
-    return 0,0,0
+    return 2,0.5,2
 
 def getOpponentsFirstRobotPosition():
     # TODO
-    return 0,0
+    return 1,1.5
 
 def getOpponentsSecondRobotPosition():
     # TODO
-    return 0,0
+    return 1,1
 
-def getAtomPosition(ID):
+def getAtomPosition(Id):
     # TODO
-    return 0,0
+    return Id/10.,Id/10.
 
-def checkState():
+def checkState(): # camera marche ou pas
     return False

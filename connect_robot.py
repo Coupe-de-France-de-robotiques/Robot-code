@@ -8,7 +8,7 @@ import time
 
 def turnRight(theta):
     # TODO
-    time.sleep(theta/10)
+    #time.sleep(theta/10)
     res = int((2 * np.pi - theta) * 1000)
     if res == 0:
         return "0000"
@@ -23,7 +23,7 @@ def turnRight(theta):
 
 def turnLeft(theta):
     # TODO
-    time.sleep(theta/10)
+    #time.sleep(theta/10)
     res = int(theta * 1000)
     if res == 0:
         return "0000"
@@ -39,7 +39,7 @@ def turnLeft(theta):
 
 def moveForward(d):
     # TODO
-    time.sleep(d)
+    #time.sleep(d)
     intD = int(d*1000)
     res = "1000000000000"
     

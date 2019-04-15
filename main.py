@@ -19,7 +19,7 @@ import copy as cp
 
 
 # TODO : SET VALUES
-camera = False
+
 ratio = 100 #means 1m = ratio points in the matrix
 atomDiameter = 0.08 #in meters
 maxRobotDiameter = 0.2 #in meters
@@ -416,23 +416,30 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
         4 - if the camera is trustfull update all elements in the table
         
     """
-    global camera
     
-    if camera:
+    if cc.checkState():
         x,y = cc.getOpponentsFirstRobotPosition()
+        old = cp.copy(opponentFirstRobot)
         opponentFirstRobot.setX(x)
         opponentFirstRobot.setY(y)
+        updateElement(old, opponentFirstRobot, table)
+        
         if numberOfOpponentRobots == 2:
             x,y = cc.getOpponentsSecondRobotPosition()
+            old = cp.copy(opponentSecondRobot)
             opponentSecondRobot.setX(x)
             opponentSecondRobot.setY(y)
-        x,y = cc.getRobotPosition()
+            updateElement(old, opponentSecondRobot, table)
+        x,y, theta = cc.getRobotPosition()
         ourRobot.setX(x)
         ourRobot.setY(y)
+        ourRobot.setDir(theta)
         for i in range(len(Atoms)):
             x,y = cc.getAtomPosition(i)
+            old = cp.copy(Atoms[i])
             Atoms[i].setX(x)
             Atoms[i].setY(y)
+            updateElement(old, Atoms[i], table)
     else:
 
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
@@ -718,6 +725,7 @@ def findPath(table, target):
 def initialRespose(): # returns initial default response (needed ???)
     return "000000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
 
+
 #################################################### Main loop #################################################### 
     
 
@@ -743,7 +751,6 @@ def action():
         draw(np.array([]), tableDisposition)
         actionScore, actionResponse = sendNextActions(tableDisposition)
         
-       
         if actionScore == -1 :
             raise ValueError('Error in actionScore!')
         else:

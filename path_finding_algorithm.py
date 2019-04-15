@@ -203,7 +203,7 @@ def addNeighboor(current, array, start, end, neighboors, onX):
 def algorithm(array, start, end):
     #return astarV1(array, start, end)
     return astarV2(array, start, end)
-    
+
 
 # gets a birnary matrix (m_i,j in {0,1}) with 1 being an obstacle
 # returns list of tuples representing the optimal path
