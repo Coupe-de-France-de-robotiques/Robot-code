@@ -31,7 +31,7 @@ opponentSecondRobotInitialPosition = (2.75, 1)
 numberOfOpponentRobots = 1 #to be set at the begining of the game
 margin = 0 # margin added to the inaccessible area of an element to the robot
 space = 0.01 # space between atoms in the periodic table >= 0 (better to set it to more than the precision of the robot mouvement)
-displayMessages = False # display print in the program of not
+displayMessages = True # display print in the program of not
 activateDraw = True # activate the function draw(path, table) [deactivate to get an idea on the time needed for calculations only]
 
 # Classes 
@@ -226,7 +226,7 @@ missions = np.array([
         [Atoms[14], target(1.4 - padding - atomDiameter, 1.8, 0), 1, 8],
         [Atoms[15], target(1.6 + padding + atomDiameter, 1.8, np.pi), 1, 8],
         
-        [Atoms[16], target(0,0,0), 1, 6], # dummy mission for now : target(x = 0, y = 0) : keep them in the list because these dummy atoms are used by the captors
+        [Atoms[16], target(0,0,0), 1, 6], # dummy mission of dummy atoms: target(x = 0, y = 0) : keep them in the list because these dummy atoms are used by the captors
         [Atoms[17], target(0,0,0), 1, 6],
         [Atoms[18], target(0,0,0), 1, 6],
         [Atoms[19], target(0,0,0), 1, 6],
@@ -375,6 +375,8 @@ def getThetaFromSourceToTarget(source, target): # in ]-pi,pi]
     dx = target[0] - source[0]
     dy = target[1] - source[1]
     
+    if dx == 0 and dy == 0: return 0
+    
     sin = dy/np.sqrt(dx**2 + dy**2)
     tetaFromSource = np.arcsin(sin)
     if(dy >= 0 and dx < 0) : tetaFromSource = np.pi - tetaFromSource
@@ -477,10 +479,13 @@ def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
         
     if len(validCaptors) != 0:
         elements = []
-        tmpListOfAtoms = [missions[i][0] for i in range(len(missions)) if missions[i][2] == 1 and missions[i][0].getLabel() >= 0] # enlever goldonium aussi ?? et les atoms de D=0
+        tmpListOfAtoms = [i for i in range(len(missions)) if missions[i][1].getX() == 0 and missions[i][1].getY() == 0]
+        tmpListOfAtoms.sort(key = lambda t : -missions[t][2])
         for i,j in validCaptors:
             if len(tmpListOfAtoms) > 0: 
-                element = tmpListOfAtoms.pop()
+                indexMission = tmpListOfAtoms.pop()
+                element = missions[indexMission][0]
+                missions[indexMission][2] += 1
                 if i != j:
                     elements.append([element, i, j, captorsData[i], captorsData[j]])
                 else:
@@ -584,7 +589,6 @@ def sendNextActions(table, startTime):
     tmpMission = currentMission - 1
     while isinstance(path, bool):
         tmpMission += 1 # raise error if no mission is possible.. of wait 2-2
-        
         #rewind when finished
         if tmpMission == len(missions):
             tmpMission, currentMission = 0, 0 
@@ -671,8 +675,13 @@ def sendNextActions(table, startTime):
         
     if not actionComplete(response) and missions[currentMission][2] == 2:
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
+        ang = ourRobot.getDir()+np.pi/2
+        if ourRobot.getDir() > np.pi/2: ang += - 2*np.pi
+        ourRobot.setDir(ourRobot.getDir()+ang)
         response = response[:13] + "00000000"
         putDown(missions[currentMission][0], table)
+        missions[currentMission][2] = 1
+        ourRobot.setDir(ourRobot.getDir()-ang)
     
     return score, response # score != 0 only if the next action is the final action of an operation and response is the string sent by arduino
 

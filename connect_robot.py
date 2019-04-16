@@ -49,21 +49,22 @@ def moveForward(d):
     global callNumber
     
     # Uncomment this to simulate a non complete action
-#    if callNumber == 25: # in the 25th call of the fuction return a response saying that the robot has an atom in fron of him and only did a half of the mission
-#        intD = int((d/2)*1000) # means only the half of the distance was done
-#        res = "0000003040000"
-#        callNumber += 1
-#        
-#        if intD == 0:
-#            return res + "0000"
-#        elif intD // 10 == 0:
-#            return res + "000"+ str(intD)
-#        elif intD // 100 == 0:
-#            return res + "00"+ str(intD)
-#        elif intD // 1000 == 0:
-#            return res + "0"+ str(intD)
-#        else:
-#            return res + str(intD)
+    if callNumber == 25: # in the 25th call of the fuction return a response saying that the robot has an atom in fron of him and only did a half of the mission
+        intD = int((d/2)*1000) # means only the half of the distance was done
+        res = "0000003040000"
+        callNumber += 1
+        
+        if intD == 0:
+            return res + "0000"
+        elif intD // 10 == 0:
+            return res + "000"+ str(intD)
+        elif intD // 100 == 0:
+            return res + "00"+ str(intD)
+        elif intD // 1000 == 0:
+            return res + "0"+ str(intD)
+        else:
+            return res + str(intD)
+        
     
     intD = int(d*1000)
     res = "1000000000000"
