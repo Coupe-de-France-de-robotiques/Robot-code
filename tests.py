@@ -30,8 +30,8 @@ def test3(i):
         
 def test4_sub(i):
     empty = mn.initializeTable(mn.atomsDisposition, mn.ourRobot, mn.opponentFirstRobot, mn.opponentSecondRobot)
-    mn.ourRobot.setX(0.402)
-    mn.ourRobot.setY(0.56)
+    mn.ourRobot.setX(0.5)
+    mn.ourRobot.setY(1.75)
     mn.ourRobot.setDir(-2.357)
     mn.draw(mn.findPath(empty, mn.Atoms[i]), empty)
 
@@ -123,7 +123,7 @@ def test12():
 #test1(17)
 #test2()
 #test3(17)
-#test4() 
+test4() 
 #test4_sub(14)
 #test6()
 #test7()
@@ -132,4 +132,4 @@ def test12():
 #test10()
 #test12()
 
-mn.action()
+#mn.action()

@@ -168,13 +168,9 @@ def accessibleNeighboors(current, array, dx, dy, target):
     addNeighboor(current, array, current[0][1], current[0][1] + dy, neighboors, False)
     addNeighboor(current, array, current[0][1] - dy, current[0][1], neighboors, False)
     
-    neighboors.sort(key = lambda t : -distance(t[0], target))
+    #neighboors.sort(key = lambda t : -distance(t[0], target))
     
     return neighboors
-
-
-def distance(a, b):
-    return np.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
 
     
 def addNeighboor(current, array, start, end, neighboors, onX):
@@ -198,8 +194,8 @@ def addNeighboor(current, array, start, end, neighboors, onX):
                     neighboors.append([(current[0][0], end), current])
                 else:
                     neighboors.append([(current[0][0], start), current])
-  
-                    
+
+
 def algorithm(array, start, end):
     #return astarV1(array, start, end)
     return astarV2(array, start, end)
