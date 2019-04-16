@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Tue Apr  9 15:37:24 2019
+
+@author: ayoubfoussoul
+"""
+
+
+"""
 Path finding algorithm in a graph of nodes
 """
 

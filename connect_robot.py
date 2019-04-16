@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Tue Apr  9 15:37:24 2019
+
+@author: ayoubfoussoul
+"""
+
+"""
 This is the code that allows the connection to the robot
 
 For now these functions return the distances/angles that they were asked to do in the response as if the action was completed witout any problem
