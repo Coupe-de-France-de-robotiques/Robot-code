@@ -324,22 +324,12 @@ def getBorders(element): #gets borders of an element in the matrix given a paddi
 
 def addElement(element, table): #returns 1 if successful and -1 if not
     Xstart, Xend, Ystart, Yend = getBorders(element)
-    warning = False
     if Xstart == -1 : return -1
     
     for x,y in itertools.product(range(Xstart, Xend+1), range(Ystart, Yend+1)):
         if np.sqrt(np.power(x - element.getX()*ratio,2) + np.power(y - element.getY()*ratio,2)) <= (element.getDiameter() / 2. + padding) * ratio:
-            if table[x][y] == 1: warning = True
             table[x][y] += 1
-    
-    #draw(np.array([]), table)
-    
-            
-    if warning :
-        if isinstance(element.getLabel(), int):
-            message("Warning! : Some of the cells used in atom " + str(element.getId()) + " were already occupied", colors.RED)
-        else:
-            message("Warning! : Some of the cells used in the robot " + element.getLabel() + " were already occupied", colors.RED)
+        
     return 1      
 
 
