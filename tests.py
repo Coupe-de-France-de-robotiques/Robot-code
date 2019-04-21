@@ -99,7 +99,7 @@ def test10():
 
 def test11():
     response = "000000206000507005759"
-    result = mn.theRobotIsLookingAt(mn.getCaptorsData(response))
+    result = mn.theRobotIsLookingAt(mn.getSensorsData(response))
     print(result)
    
 # Test updateTable

@@ -233,7 +233,7 @@ missions = np.array([
         [Atoms[14], target(1.4 - padding - atomDiameter, 1.8, 0), 1, 8],
         [Atoms[15], target(1.6 + padding + atomDiameter, 1.8, np.pi), 1, 8],
         
-        [Atoms[16], target(0,0,0), 1, 6], # dummy mission of dummy atoms: target(x = 0, y = 0) : keep them in the list because these dummy atoms are used by the captors
+        [Atoms[16], target(0,0,0), 1, 6], # dummy mission of dummy atoms: target(x = 0, y = 0) : keep them in the list because these dummy atoms are used by the sensors
         [Atoms[17], target(0,0,0), 1, 6],
         [Atoms[18], target(0,0,0), 1, 6],
         [Atoms[19], target(0,0,0), 1, 6],
@@ -449,7 +449,7 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
     else:
 
         updateOurRobotPosition(getTraveledDistance(response), getRotationAngle(response), ourRobot)
-        elements = theRobotIsLookingAt(getCaptorsData(response))
+        elements = theRobotIsLookingAt(getSensorsData(response))
              
         for elementData in elements:
             updatePosition(elementData, ourRobot, table)
@@ -457,36 +457,36 @@ def updateTable(table, ourRobot, opponentFirstRobot, opponentSecondRobot, atomsD
     message("Table state updated...", colors.RESET)
 
 
-def theRobotIsLookingAt(captorsData, R = ourRobot.getDiameter() / 2):
+def theRobotIsLookingAt(sensorsData, R = ourRobot.getDiameter() / 2):
     
-    validCaptors = []
-    if captorsData[0] <= atomDiameter and captorsData[0] != 0.0 and captorsData[1] == 0.0:
-        validCaptors.append((0,0))
-    if captorsData[5] <= atomDiameter and captorsData[5] != 0.0 and captorsData[4] == 0.0:
-        validCaptors.append((5,5))
+    validSensors = []
+    if sensorsData[0] <= atomDiameter and sensorsData[0] != 0.0 and sensorsData[1] == 0.0:
+        validSensors.append((0,0))
+    if sensorsData[5] <= atomDiameter and sensorsData[5] != 0.0 and sensorsData[4] == 0.0:
+        validSensors.append((5,5))
     for i in range(5):
-        if captorsData[i] != 0.0 and captorsData[i+1] != 0.0 and func(captorsData[i], captorsData[i+1], R):
-            validCaptors.append((i,i+1))
+        if sensorsData[i] != 0.0 and sensorsData[i+1] != 0.0 and func(sensorsData[i], sensorsData[i+1], R):
+            validSensors.append((i,i+1))
             
     # ignore if looking at the atom of the mission
     xm = missions[currentMission][0].getX()
     ym = missions[currentMission][0].getY()
-    if missions[currentMission][2] == 1 and np.sqrt((xm - ourRobot.getX())**2 + (ym - ourRobot.getY())**2) <= R + atomDiameter + 0.07 and ourRobot.getDir() - getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), (int(xm*ratio),int(ym*ratio))) <= 0.23 and (2,3) in validCaptors:
-        validCaptors.remove((2,3))
+    if missions[currentMission][2] == 1 and np.sqrt((xm - ourRobot.getX())**2 + (ym - ourRobot.getY())**2) <= R + atomDiameter + 0.07 and ourRobot.getDir() - getThetaFromSourceToTarget((int(ourRobot.getX()*ratio),int(ourRobot.getY()*ratio)), (int(xm*ratio),int(ym*ratio))) <= 0.23 and (2,3) in validSensors:
+        validSensors.remove((2,3))
         
-    if len(validCaptors) != 0:
+    if len(validSensors) != 0:
         elements = []
         tmpListOfAtoms = [i for i in range(len(missions)) if missions[i][1].getX() == 0 and missions[i][1].getY() == 0]
         tmpListOfAtoms.sort(key = lambda t : -missions[t][2])
-        for i,j in validCaptors:
+        for i,j in validSensors:
             if len(tmpListOfAtoms) > 0: 
                 indexMission = tmpListOfAtoms.pop()
                 element = missions[indexMission][0]
                 missions[indexMission][2] += 1
                 if i != j:
-                    elements.append([element, i, j, captorsData[i], captorsData[j]])
+                    elements.append([element, i, j, sensorsData[i], sensorsData[j]])
                 else:
-                    elements.append([element, i, j, captorsData[i], captorsData[j] + element.getDiameter()])
+                    elements.append([element, i, j, sensorsData[i], sensorsData[j] + element.getDiameter()])
         return elements
     else:
         return []    
@@ -704,7 +704,7 @@ def putDown(element, table):
 def actionComplete(response): # returns a boolean saying if response indicates that the action was interupted (false) or not (true)
     return int(response[0]) == 1
 
-def getCaptorsData(response): # 0 if element is out of [0,15]
+def getSensorsData(response): # 0 if element is out of [0,15]
     return int(response[1:3]) / 100. , int(response[3:5]) / 100. , int(response[5:7]) / 100. , int(response[7:9]) / 100. , int(response[9:11]) / 100. , int(response[11:13]) / 100.  
 
 def getTraveledDistance(response):
@@ -743,7 +743,7 @@ def findPath(table, target):
 
 
 def initialRespose(): # returns initial default response (needed ???)
-    return "000000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for captors => 4 digits traveled distance => 4 digits angle
+    return "000000000000000000000" # 1st digit for action complete or not => 6 x 2 digits for sensors => 4 digits traveled distance => 4 digits angle
 
 
 #################################################### Main loop #################################################### 

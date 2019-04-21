@@ -12,7 +12,7 @@ This is the code that allows the connection to the robot
 For now these functions return the distances/angles that they were asked to do in the response as if the action was completed witout any problem
 You can change the the return value of one of the calls of moveForward(d) for example to be ["0" (means action non complete + "000003040000" + "xyzt"]
 where xyzt represent a distance smaller than d means that the robot did not complete the action in this call of the fuction because something was 3cm and 4cm
-in front of the captors 2 and 3 respectively (uncomment corresponding lines to do so)
+in front of the sensors 2 and 3 respectively (uncomment corresponding lines to do so)
 """
 import numpy as np
 import time
